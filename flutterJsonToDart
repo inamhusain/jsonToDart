@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flutter JSON → Dart Model Generator</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Inter, sans-serif;
+      background: #0f172a;
+      color: white;
+      margin: 0;
+      padding: 24px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .flutter-icon {
+      width: 42px;
+      height: 42px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .styled-input {
+      flex: 1;
+      min-width: 280px;
+      padding: 14px 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.06);
+      color: white;
+      outline: none;
+      font-size: 14px;
+      transition: all 0.25s ease;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+
+    .styled-input:focus {
+      border-color: rgba(99,102,241,0.7);
+      box-shadow: 0 0 0 4px rgba(99,102,241,0.18);
+    }
+
+    .checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.08);
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 14px 24px;
+      border: none;
+      border-radius: 12px;
+      background: #6366f1;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      height: calc(100vh - 180px);
+    }
+
+    #jsonEditor,
+    #outputEditor {
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(34,197,94,0.95);
+      color: white;
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 14px;
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+      transition: all 0.3s ease;
+      z-index: 9999;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+
+  <script src="https://unpkg.com/monaco-editor@0.52.2/min/vs/loader.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <svg class="flutter-icon" viewBox="0 0 24 24" fill="none">
+    <path d="M14.314 0L2 12.314l3.686 3.686L21.686 0h-7.372Z" fill="#42A5F5"/>
+    <path d="M5.686 16L9.372 19.686 21.686 7.372V0L5.686 16Z" fill="#1E88E5"/>
+    <path d="M9.372 19.686L14.314 24h7.372L13.058 15.372l-3.686 4.314Z" fill="#42A5F5"/>
+  </svg>
+  <h1>JSON → Dart Model Generator</h1>
+</div>
+
+<div class="controls">
+  <input id="classNameInput" class="styled-input" placeholder="Enter main class name" />
+
+  <label class="checkbox">
+    <input type="radio" name="modelStyle" id="manualStyle" checked />
+    Manual
+  </label>
+
+  <label class="checkbox">
+    <input type="radio" name="modelStyle" id="factoryStyle" />
+    Factory
+  </label>
+
+  <label class="checkbox">
+    <input type="checkbox" id="fromJsonCheck" checked />
+    fromJson
+  </label>
+
+  <label class="checkbox">
+    <input type="checkbox" id="toJsonCheck" checked />
+    toJson
+  </label>
+
+  <button onclick="generateDart()">Generate Dart</button>
+  <button onclick="copyGeneratedCode()">Copy Code</button>
+</div>
+
+<div class="container">
+  <div id="jsonEditor"></div>
+  <div id="outputEditor"></div>
+</div>
+
+<div id="toast" class="toast">Copied successfully ✓</div>
+
+<script>
+let jsonEditor;
+let outputEditor;
+
+require.config({
+  paths: {
+    vs: "https://unpkg.com/monaco-editor@0.52.2/min/vs"
+  }
+});
+
+require(["vs/editor/editor.main"], function () {
+  jsonEditor = monaco.editor.create(document.getElementById("jsonEditor"), {
+    value: "{\n  \n}",
+    language: "json",
+    theme: "vs-dark",
+    automaticLayout: true,
+    minimap: { enabled: true },
+    folding: true,
+    lineNumbers: "on",
+    formatOnPaste: true,
+    formatOnType: true
+  });
+
+  outputEditor = monaco.editor.create(document.getElementById("outputEditor"), {
+    value: "",
+    language: "dart",
+    theme: "vs-dark",
+    readOnly: true,
+    automaticLayout: true,
+    minimap: { enabled: true },
+    folding: true,
+    lineNumbers: "on"
+  });
+
+  jsonEditor.onDidChangeModelContent(() => {
+    validateJsonLive();
+  });
+});
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.classList.add("show");
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 1800);
+}
+
+function validateJsonLive() {
+  const text = jsonEditor.getValue();
+
+  try {
+    JSON.parse(text);
+    monaco.editor.setModelMarkers(jsonEditor.getModel(), "json", []);
+  } catch (e) {
+    const match = e.message.match(/position (\d+)/);
+    if (!match) return;
+
+    const pos = jsonEditor.getModel().getPositionAt(Number(match[1]));
+
+    monaco.editor.setModelMarkers(jsonEditor.getModel(), "json", [{
+      startLineNumber: pos.lineNumber,
+      startColumn: pos.column,
+      endLineNumber: pos.lineNumber,
+      endColumn: pos.column + 1,
+      message: e.message,
+      severity: monaco.MarkerSeverity.Error
+    }]);
+  }
+}
+
+function toPascalCase(str) {
+  return str
+    .replace(/[_-](.)/g, (_, c) => c.toUpperCase())
+    .replace(/\s+(.)/g, (_, c) => c.toUpperCase())
+    .replace(/^(.)/, (_, c) => c.toUpperCase());
+}
+
+function toCamelCase(str) {
+  const pascal = toPascalCase(str);
+  return pascal.charAt(0).toLowerCase() + pascal.slice(1);
+}
+
+function primitiveType(value) {
+  if (value === null) return 'dynamic';
+
+  switch (typeof value) {
+    case 'string': return 'String';
+    case 'number': return Number.isInteger(value) ? 'int' : 'double';
+    case 'boolean': return 'bool';
+    default: return 'dynamic';
+  }
+}
+
+function getType(value, key, classes, options) {
+  if (Array.isArray(value)) {
+    if (!value.length) return 'List<dynamic>';
+
+    const first = value[0];
+
+    if (typeof first === 'object' && first !== null) {
+      const className = toPascalCase(key);
+      generateClass(className, first, classes, options);
+      return `List<${className}>`;
+    }
+
+    return `List<${primitiveType(first)}>`;
+  }
+
+  if (typeof value === 'object' && value !== null) {
+    const className = toPascalCase(key);
+    generateClass(className, value, classes, options);
+    return className;
+  }
+
+  return primitiveType(value);
+}
+
+function generateClass(className, json, classes, options) {
+  if (classes[className]) return;
+
+  const isFactory = options.style === 'factory';
+
+  let fields = '';
+  let constructor = '';
+  let fromJsonFields = '';
+  let toJsonFields = '';
+  let factoryFields = '';
+
+  for (const key in json) {
+    const value = json[key];
+    const type = getType(value, key, classes, options);
+    const fieldName = toCamelCase(key);
+
+    fields += isFactory
+      ? `  final ${type}? ${fieldName};\n`
+      : `  ${type}? ${fieldName};\n`;
+
+    constructor += `    this.${fieldName},\n`;
+
+    if (type.startsWith('List<')) {
+      const inner = type.match(/List<(.*)>/)[1];
+
+      if (Array.isArray(value) && value.length && typeof value[0] === 'object') {
+        const listCode = `(json['${key}'] as List<dynamic>?)
+        ?.map((e) => ${inner}.fromJson(e as Map<String, dynamic>))
+        .toList()`;
+
+        fromJsonFields += `    ${fieldName} = ${listCode};\n`;
+        factoryFields += `      ${fieldName}: ${listCode},\n`;
+        toJsonFields += `      '${key}': ${fieldName}?.map((e) => e.toJson()).toList(),\n`;
+      } else {
+        fromJsonFields += `    ${fieldName} = (json['${key}'] as List<dynamic>?)
+        ?.map((e) => e as ${inner})
+        .toList();\n`;
+
+        factoryFields += `      ${fieldName}: (json['${key}'] as List<dynamic>?)
+        ?.map((e) => e as ${inner})
+        .toList(),\n`;
+
+        toJsonFields += `      '${key}': ${fieldName},\n`;
+      }
+    } else if (typeof value === 'object' && value !== null) {
+      const objectCode = `json['${key}'] != null
+        ? ${type}.fromJson(json['${key}'] as Map<String, dynamic>)
+        : null`;
+
+      fromJsonFields += `    ${fieldName} = ${objectCode};\n`;
+      factoryFields += `      ${fieldName}: ${objectCode},\n`;
+      toJsonFields += `      '${key}': ${fieldName}?.toJson(),\n`;
+    } else {
+      fromJsonFields += `    ${fieldName} = json['${key}'] as ${type}?;\n`;
+      factoryFields += `      ${fieldName}: json['${key}'] as ${type}?,\n`;
+      toJsonFields += `      '${key}': ${fieldName},\n`;
+    }
+  }
+
+  let methods = '';
+
+  if (options.fromJson) {
+    methods += isFactory
+      ? `
+  factory ${className}.fromJson(Map<String, dynamic> json) {
+    return ${className}(
+${factoryFields}    );
+  }
+`
+      : `
+  ${className}.fromJson(Map<String, dynamic> json) {
+${fromJsonFields}  }
+`;
+  }
+
+  if (options.toJson) {
+    methods += `
+  Map<String, dynamic> toJson() {
+    return {
+${toJsonFields}    };
+  }
+`;
+  }
+
+  classes[className] = `
+class ${className} {
+${fields}
+  ${className}({
+${constructor}  });
+${methods}
+}
+`;
+}
+
+function generateDart() {
+  try {
+    const json = JSON.parse(jsonEditor.getValue());
+
+    const classes = {};
+    const className =
+      document.getElementById("classNameInput").value.trim() || "RootModel";
+
+    generateClass(toPascalCase(className), json, classes, {
+      style: document.getElementById("factoryStyle").checked ? "factory" : "manual",
+      fromJson: document.getElementById("fromJsonCheck").checked,
+      toJson: document.getElementById("toJsonCheck").checked
+    });
+
+    outputEditor.setValue(
+      Object.values(classes).reverse().join("\n")
+    );
+  } catch (e) {
+    outputEditor.setValue(`// Invalid JSON\n// ${e.message}`);
+  }
+}
+
+function copyGeneratedCode() {
+  navigator.clipboard.writeText(outputEditor.getValue());
+  showToast("Copied successfully ✓");
+}
+</script>
+
+</body>
+</html>
