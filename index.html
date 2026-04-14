@@ -4,191 +4,307 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Flutter JSON → Dart Model Generator</title>
-
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: Inter, sans-serif;
-      background: #0f172a;
-      color: white;
-      margin: 0;
-      padding: 24px;
-      animation: fadeIn 0.6s ease;
+      font-family: Inter, -apple-system, sans-serif;
+      background: #0a0e1a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 0;
     }
 
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(12px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateX(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
-
-    .header {
+    .topbar {
+      background: #0d1220;
+      border-bottom: 1px solid rgba(99,179,237,0.15);
+      padding: 0 24px;
+      height: 52px;
       display: flex;
       align-items: center;
-      gap: 14px;
-      margin-bottom: 24px;
-      animation: slideIn 0.5s ease;
+      gap: 10px;
     }
 
-    .flutter-icon {
-      width: 42px;
-      height: 42px;
-      transition: transform 0.3s ease;
+    .topbar-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #e2e8f0;
+      letter-spacing: 0.01em;
     }
 
-    .flutter-icon:hover {
-      transform: rotate(-8deg) scale(1.08);
+    .topbar-subtitle {
+      font-size: 12px;
+      color: #54b3f5;
+      background: rgba(84,179,245,0.12);
+      border: 1px solid rgba(84,179,245,0.2);
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-left: 4px;
     }
 
-    h1 {
-      margin: 0;
-      font-size: 28px;
-      font-weight: 700;
+    .flutter-logo {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
     }
 
-    .controls {
+    .toolbar {
+      background: #111827;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      padding: 10px 20px;
       display: flex;
       flex-wrap: wrap;
-      gap: 14px;
+      gap: 8px;
       align-items: center;
-      margin-bottom: 24px;
-      padding: 16px;
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(12px);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-      animation: fadeIn 0.7s ease;
     }
 
-    .styled-input {
-      min-width: 220px;
-      padding: 14px 18px;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 14px;
-      background: rgba(255,255,255,0.06);
-      color: white;
-      outline: none;
-      font-size: 14px;
-      transition: all 0.25s ease;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    }
-
-    .styled-input::placeholder {
-      color: rgba(255,255,255,0.5);
-    }
-
-    .styled-input:focus {
-      border-color: rgba(99,102,241,0.7);
-      box-shadow: 0 0 0 4px rgba(99,102,241,0.18);
-      transform: translateY(-1px);
-    }
-
-    .checkbox {
+    .toolbar-group {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 12px 16px;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.08);
-      font-size: 14px;
+      gap: 6px;
+    }
+
+    .toolbar-divider {
+      width: 1px;
+      height: 24px;
+      background: rgba(255,255,255,0.1);
+      margin: 0 4px;
+    }
+
+    .tb-label {
+      font-size: 11px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 500;
+    }
+
+    .tb-input {
+      background: #1e2a3a;
+      border: 1px solid rgba(99,179,237,0.2);
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 13px;
+      padding: 7px 12px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 160px;
+    }
+
+    .tb-input::placeholder { color: #4a5568; }
+
+    .tb-input:focus {
+      border-color: #54b3f5;
+      box-shadow: 0 0 0 3px rgba(84,179,245,0.1);
+    }
+
+    .toggle-group {
+      display: flex;
+      background: #1a2332;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .toggle-btn {
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #64748b;
       cursor: pointer;
-      transition: 0.25s ease;
+      border: none;
+      background: transparent;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .toggle-btn:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      right: 0; top: 20%; bottom: 20%;
+      width: 1px;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .toggle-btn.active {
+      background: rgba(84,179,245,0.15);
+      color: #54b3f5;
+    }
+
+    .cb-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #94a3b8;
+      background: #1a2332;
+      border: 1px solid rgba(255,255,255,0.08);
+      cursor: pointer;
+      transition: all 0.15s;
       user-select: none;
     }
 
-    .checkbox:hover {
-      transform: translateY(-1px);
-      background: rgba(255,255,255,0.11);
+    .cb-pill:hover { background: #1e2a3a; color: #cbd5e0; }
+
+    .cb-pill input { display: none; }
+
+    .cb-dot {
+      width: 14px; height: 14px;
+      border-radius: 4px;
+      border: 1.5px solid #4a5568;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
     }
 
-    button {
-      padding: 14px 22px;
+    .cb-pill.checked .cb-dot {
+      background: #54b3f5;
+      border-color: #54b3f5;
+    }
+
+    .cb-pill.checked .cb-dot::after {
+      content: '';
+      width: 7px; height: 5px;
+      border-left: 1.5px solid #0a0e1a;
+      border-bottom: 1.5px solid #0a0e1a;
+      transform: rotate(-45deg) translateY(-1px);
+    }
+
+    .cb-pill.checked { color: #54b3f5; border-color: rgba(84,179,245,0.3); background: rgba(84,179,245,0.08); }
+
+    .btn-generate {
+      padding: 8px 18px;
       border: none;
-      border-radius: 12px;
-      background: #6366f1;
-      color: white;
+      border-radius: 8px;
+      background: #1d4ed8;
+      color: #fff;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      transition: 0.25s ease;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(99,102,241,0.25);
+    .btn-generate:hover { background: #2563eb; transform: translateY(-1px); }
+    .btn-generate:active { transform: scale(0.97); }
+
+    .btn-copy {
+      padding: 8px 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
 
-    .container {
+    .btn-copy:hover { background: rgba(255,255,255,0.06); color: #e2e8f0; }
+
+    .editors-wrap {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      height: calc(100vh - 240px);
-      animation: fadeIn 0.8s ease;
+      height: calc(100vh - 104px);
     }
 
-    #jsonEditor,
-    #outputEditor {
-      border-radius: 16px;
+    .editor-pane {
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-      transition: 0.3s ease;
+      border-right: 1px solid rgba(255,255,255,0.07);
     }
 
-    #jsonEditor:hover,
-    #outputEditor:hover {
-      transform: translateY(-2px);
+    .editor-pane:last-child { border-right: none; }
+
+    .pane-header {
+      background: #111827;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .pane-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 500;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .lang-badge {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 20px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+    }
+
+    .lang-json { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.2); }
+    .lang-dart { background: rgba(84,179,245,0.12); color: #54b3f5; border: 1px solid rgba(84,179,245,0.2); }
+
+    .pane-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #2d3748;
+    }
+
+    .pane-dot.active { background: #48bb78; }
+
+    #jsonEditor, #outputEditor {
+      flex: 1;
+      min-height: 0;
     }
 
     .toast {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: rgba(34,197,94,0.95);
-      color: white;
-      padding: 14px 18px;
-      border-radius: 12px;
-      font-size: 14px;
+      bottom: 20px;
+      right: 20px;
+      background: #1a3a2a;
+      border: 1px solid rgba(72,187,120,0.35);
+      color: #68d391;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
       opacity: 0;
-      transform: translateY(20px);
+      transform: translateY(10px);
       pointer-events: none;
-      transition: all 0.3s ease;
+      transition: all 0.25s ease;
       z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 7px;
     }
 
-    .toast.show {
-      opacity: 1;
-      transform: translateY(0);
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    .prefix-wrap {
+      display: none;
+      animation: fadeSlide 0.2s ease;
     }
 
-    @media (max-width: 900px) {
-      .container {
-        grid-template-columns: 1fr;
-        height: auto;
-      }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateX(-6px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
 
-      #jsonEditor,
-      #outputEditor {
-        min-height: 400px;
-      }
+    @media (max-width: 800px) {
+      .editors-wrap { grid-template-columns: 1fr; height: auto; }
+      #jsonEditor, #outputEditor { height: 45vh; }
     }
   </style>
 
@@ -196,106 +312,187 @@
 </head>
 <body>
 
-<div class="header">
-  <svg class="flutter-icon" viewBox="0 0 24 24" fill="none">
+<div class="topbar">
+  <svg class="flutter-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M14.314 0L2 12.314l3.686 3.686L21.686 0h-7.372Z" fill="#42A5F5"/>
     <path d="M5.686 16L9.372 19.686 21.686 7.372V0L5.686 16Z" fill="#1E88E5"/>
     <path d="M9.372 19.686L14.314 24h7.372L13.058 15.372l-3.686 4.314Z" fill="#42A5F5"/>
+    <path d="M13.058 15.372L9.372 19.686l2.314 2.314 5.372-5.37-4.0-1.258Z" fill="#0D47A1" opacity="0.5"/>
   </svg>
-  <h1>JSON → Dart Model Generator</h1>
+  <span class="topbar-title">JSON → Dart Model Generator</span>
+  <span class="topbar-subtitle">Flutter</span>
 </div>
 
-<div class="controls">
-  <input id="classNameInput" class="styled-input" placeholder="Main class name" />
+<div class="toolbar">
+  <div class="toolbar-group">
+    <span class="tb-label">Class</span>
+    <input id="classNameInput" class="tb-input" placeholder="Root class name" />
+  </div>
 
-  <label class="checkbox">
-    <input type="checkbox" id="usePrefixCheck" onchange="togglePrefixField()" />
-    Prefix Child Classes
-  </label>
+  <div class="toolbar-divider"></div>
 
-  <input
-    id="prefixInput"
-    class="styled-input"
-    placeholder="Prefix (e.g. Api)"
-    style="display:none;"
-  />
+  <div class="toolbar-group">
+    <span class="tb-label">Style</span>
+    <div class="toggle-group">
+      <button class="toggle-btn active" id="manualBtn" onclick="setStyle('manual')">Manual</button>
+      <button class="toggle-btn" id="factoryBtn" onclick="setStyle('factory')">Factory</button>
+    </div>
+  </div>
 
-  <label class="checkbox">
-    <input type="radio" name="modelStyle" id="manualStyle" checked />
-    Manual
-  </label>
+  <div class="toolbar-divider"></div>
 
-  <label class="checkbox">
-    <input type="radio" name="modelStyle" id="factoryStyle" />
-    Factory
-  </label>
+  <div class="toolbar-group">
+    <label class="cb-pill checked" id="fromJsonPill" onclick="togglePill(this,'fromJsonCheck')">
+      <input type="checkbox" id="fromJsonCheck" checked />
+      <span class="cb-dot"></span>
+      fromJson
+    </label>
+    <label class="cb-pill checked" id="toJsonPill" onclick="togglePill(this,'toJsonCheck')">
+      <input type="checkbox" id="toJsonCheck" checked />
+      <span class="cb-dot"></span>
+      toJson
+    </label>
+    <label class="cb-pill" id="prefixPill" onclick="togglePill(this,'usePrefixCheck')">
+      <input type="checkbox" id="usePrefixCheck" />
+      <span class="cb-dot"></span>
+      Prefix
+    </label>
+  </div>
 
-  <label class="checkbox">
-    <input type="checkbox" id="fromJsonCheck" checked />
-    fromJson
-  </label>
+  <div class="prefix-wrap" id="prefixWrap">
+    <input id="prefixInput" class="tb-input" placeholder="Prefix (e.g. Api)" style="width:130px;" />
+  </div>
 
-  <label class="checkbox">
-    <input type="checkbox" id="toJsonCheck" checked />
-    toJson
-  </label>
+  <div class="toolbar-divider"></div>
 
-  <button onclick="generateDart()">Generate Dart</button>
-  <button onclick="copyGeneratedCode()">Copy Code</button>
+  <div class="toolbar-group">
+    <button class="btn-generate" onclick="generateDart()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polygon points="4,2 14,8 4,14" fill="white"/></svg>
+      Generate
+    </button>
+    <button class="btn-copy" onclick="copyGeneratedCode()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="2"/><path d="M3 11V3a2 2 0 012-2h8"/></svg>
+      Copy
+    </button>
+  </div>
 </div>
 
-<div class="container">
-  <div id="jsonEditor"></div>
-  <div id="outputEditor"></div>
+<div class="editors-wrap">
+  <div class="editor-pane">
+    <div class="pane-header">
+      <span class="pane-title">
+        <span class="pane-dot active"></span>
+        Input
+        <span class="lang-badge lang-json">JSON</span>
+      </span>
+    </div>
+    <div id="jsonEditor"></div>
+  </div>
+
+  <div class="editor-pane">
+    <div class="pane-header">
+      <span class="pane-title">
+        <span class="pane-dot" id="outputDot"></span>
+        Output
+        <span class="lang-badge lang-dart">Dart</span>
+      </span>
+    </div>
+    <div id="outputEditor"></div>
+  </div>
 </div>
 
-<div id="toast" class="toast">Copied successfully ✓</div>
+<div id="toast" class="toast">
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#68d391" stroke-width="2"><polyline points="2,8 6,12 14,4"/></svg>
+  Copied to clipboard
+</div>
 
 <script>
-let jsonEditor;
-let outputEditor;
+let jsonEditor, outputEditor;
+let currentStyle = 'manual';
 
-require.config({
-  paths: {
-    vs: "https://unpkg.com/monaco-editor@0.52.2/min/vs"
-  }
-});
+require.config({ paths: { vs: "https://unpkg.com/monaco-editor@0.52.2/min/vs" } });
 
 require(["vs/editor/editor.main"], function () {
-  jsonEditor = monaco.editor.create(document.getElementById("jsonEditor"), {
-    value: "{\n  \n}",
-    language: "json",
-    theme: "vs-dark",
+  const darkTheme = {
+    base: 'vs-dark',
+    inherit: true,
+    rules: [
+      { token: 'comment', foreground: '4a5568' },
+      { token: 'keyword', foreground: '54b3f5' },
+      { token: 'string', foreground: 'a8d8a8' },
+      { token: 'number', foreground: 'fbbf24' },
+      { token: 'type', foreground: 'c084fc' },
+    ],
+    colors: {
+      'editor.background': '#0a0e1a',
+      'editor.foreground': '#e2e8f0',
+      'editorLineNumber.foreground': '#2d3748',
+      'editorLineNumber.activeForeground': '#64748b',
+      'editor.selectionBackground': '#1d4ed840',
+      'editor.lineHighlightBackground': '#111827',
+      'editorCursor.foreground': '#54b3f5',
+      'editorIndentGuide.background': '#1e2a3a',
+      'editorGutter.background': '#0a0e1a',
+      'scrollbarSlider.background': '#1e2a3a',
+      'scrollbarSlider.hoverBackground': '#2d3748',
+    }
+  };
+
+  monaco.editor.defineTheme('flutterDark', darkTheme);
+
+  const sharedOpts = {
+    theme: 'flutterDark',
     automaticLayout: true,
-    minimap: { enabled: true },
+    minimap: { enabled: false },
+    scrollBeyondLastLine: false,
+    fontSize: 13,
+    lineHeight: 22,
+    fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
+    fontLigatures: true,
+    padding: { top: 16, bottom: 16 },
+    renderLineHighlight: 'gutter',
+    lineNumbers: 'on',
     folding: true,
-    lineNumbers: "on"
+    bracketPairColorization: { enabled: true },
+    smoothScrolling: true,
+    cursorBlinking: 'smooth',
+    cursorSmoothCaretAnimation: true,
+  };
+
+  jsonEditor = monaco.editor.create(document.getElementById("jsonEditor"), {
+    ...sharedOpts,
+    value: '{\n  "id": 1,\n  "name": "Flutter",\n  "isActive": true,\n  "score": 9.5,\n  "address": {\n    "city": "San Francisco",\n    "zip": "94102"\n  }\n}',
+    language: "json",
   });
 
   outputEditor = monaco.editor.create(document.getElementById("outputEditor"), {
-    value: "",
+    ...sharedOpts,
+    value: '',
     language: "dart",
-    theme: "vs-dark",
     readOnly: true,
-    automaticLayout: true
   });
 });
 
-function togglePrefixField() {
-  const checkbox = document.getElementById("usePrefixCheck");
-  const prefixInput = document.getElementById("prefixInput");
+function setStyle(style) {
+  currentStyle = style;
+  document.getElementById('manualBtn').classList.toggle('active', style === 'manual');
+  document.getElementById('factoryBtn').classList.toggle('active', style === 'factory');
+}
 
-  prefixInput.style.display = checkbox.checked ? "block" : "none";
+function togglePill(pill, checkId) {
+  const check = document.getElementById(checkId);
+  check.checked = !check.checked;
+  pill.classList.toggle('checked', check.checked);
+
+  if (checkId === 'usePrefixCheck') {
+    document.getElementById('prefixWrap').style.display = check.checked ? 'block' : 'none';
+  }
 }
 
 function showToast(message) {
   const toast = document.getElementById("toast");
-  toast.textContent = message;
   toast.classList.add("show");
-
-  setTimeout(() => {
-    toast.classList.remove("show");
-  }, 1800);
+  setTimeout(() => toast.classList.remove("show"), 2000);
 }
 
 function toPascalCase(str) {
@@ -304,130 +501,179 @@ function toPascalCase(str) {
             .replace(/^(.)/, (_, c) => c.toUpperCase());
 }
 
-function getChildClassName(name) {
+function getPrefix() {
   const usePrefix = document.getElementById("usePrefixCheck").checked;
   const prefix = document.getElementById("prefixInput").value.trim();
+  return (usePrefix && prefix) ? toPascalCase(prefix) : '';
+}
 
-  if (!usePrefix || !prefix) {
-    return toPascalCase(name);
+function getClassName(name) {
+  return getPrefix() + toPascalCase(name);
+}
+
+// Infer Dart type string for a JSON value, collecting needed sub-classes
+function inferType(key, value, classes) {
+  if (value === null || value === undefined) return 'dynamic';
+  if (typeof value === 'string') return 'String';
+  if (typeof value === 'boolean') return 'bool';
+  if (typeof value === 'number') return Number.isInteger(value) ? 'int' : 'double';
+  if (Array.isArray(value)) {
+    if (value.length === 0) return 'List<dynamic>';
+    const first = value[0];
+    const inner = inferType(key, first, classes);
+    return `List<${inner}>`;
+  }
+  if (typeof value === 'object') {
+    const className = getClassName(key);
+    // Schedule class generation if not already queued
+    if (!classes.has(className)) {
+      classes.set(className, value);
+    }
+    return className;
+  }
+  return 'dynamic';
+}
+
+// Cast expression for fromJson
+function castFromJson(key, value, classes) {
+  if (value === null || value === undefined) return `json['${key}']`;
+  if (typeof value === 'string') return `json['${key}'] as String?`;
+  if (typeof value === 'boolean') return `json['${key}'] as bool?`;
+  if (typeof value === 'number') {
+    const t = Number.isInteger(value) ? 'int' : 'double';
+    return `json['${key}'] as ${t}?`;
+  }
+  if (Array.isArray(value)) {
+    if (value.length === 0) return `json['${key}'] as List<dynamic>?`;
+    const first = value[0];
+    if (typeof first === 'string') {
+      return `(json['${key}'] as List<dynamic>?)?.map((e) => e as String).toList()`;
+    }
+    if (typeof first === 'number') {
+      const t = Number.isInteger(first) ? 'int' : 'double';
+      return `(json['${key}'] as List<dynamic>?)?.map((e) => e as ${t}).toList()`;
+    }
+    if (typeof first === 'boolean') {
+      return `(json['${key}'] as List<dynamic>?)?.map((e) => e as bool).toList()`;
+    }
+    if (typeof first === 'object' && first !== null && !Array.isArray(first)) {
+      const cn = getClassName(key);
+      return `(json['${key}'] as List<dynamic>?)\n        ?.map((e) => ${cn}.fromJson(e as Map<String, dynamic>))\n        .toList()`;
+    }
+    return `json['${key}'] as List<dynamic>?`;
+  }
+  if (typeof value === 'object') {
+    const cn = getClassName(key);
+    return `json['${key}'] != null\n        ? ${cn}.fromJson(json['${key}'] as Map<String, dynamic>)\n        : null`;
+  }
+  return `json['${key}']`;
+}
+
+// Cast expression for toJson
+function castToJson(key, value) {
+  if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' && value[0] !== null) {
+    return `${key}?.map((e) => e.toJson()).toList()`;
+  }
+  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+    return `${key}?.toJson()`;
+  }
+  return key;
+}
+
+// Generate a single class block
+function buildClass(className, obj, isFactory, includeFromJson, includeToJson, classes) {
+  const keys = Object.keys(obj);
+  let out = `class ${className} {\n`;
+
+  // Constructor
+  out += `  ${className}({\n`;
+  for (const key of keys) {
+    out += `    this.${key},\n`;
+  }
+  out += `  });\n`;
+
+  // fromJson
+  if (includeFromJson) {
+    out += `\n  ${className}.fromJson(Map<String, dynamic> json) {\n`;
+    for (const key of keys) {
+      const cast = castFromJson(key, obj[key], classes);
+      out += `    ${key} = ${cast};\n`;
+    }
+    out += `  }\n`;
   }
 
-  return `${toPascalCase(prefix)}${toPascalCase(name)}`;
+  // Fields
+  out += `\n`;
+  for (const key of keys) {
+    const type = inferType(key, obj[key], classes);
+    out += `  ${type}? ${key};\n`;
+  }
+
+  // toJson
+  if (includeToJson) {
+    out += `\n  Map<String, dynamic> toJson() {\n    return {\n`;
+    for (const key of keys) {
+      const val = castToJson(key, obj[key]);
+      out += `      '${key}': ${val},\n`;
+    }
+    out += `    };\n  }\n`;
+  }
+
+  out += `}\n`;
+  return out;
 }
 
 function generateDart() {
   try {
     const json = JSON.parse(jsonEditor.getValue());
+    const mainClassName = toPascalCase(
+      document.getElementById("classNameInput").value.trim() || "RootModel"
+    );
+    const isFactory = currentStyle === 'factory';
+    const includeFromJson = document.getElementById("fromJsonCheck").checked;
+    const includeToJson = document.getElementById("toJsonCheck").checked;
 
-    const mainClass =
-      document.getElementById("classNameInput").value.trim() ||
-      "RootModel";
+    // We use an ordered Map to track all classes to generate (BFS order)
+    const classes = new Map();
+    classes.set(mainClassName, json);
 
-    const isFactory =
-      document.getElementById("factoryStyle").checked;
+    let output = '';
 
-    const includeFromJson =
-      document.getElementById("fromJsonCheck").checked;
+    // Process queue — new entries get added inside buildClass via inferType/castFromJson
+    const processed = new Set();
+    const queue = [mainClassName];
 
-    const includeToJson =
-      document.getElementById("toJsonCheck").checked;
+    while (queue.length > 0) {
+      const name = queue.shift();
+      if (processed.has(name)) continue;
+      processed.add(name);
 
-    let output = `class ${toPascalCase(mainClass)} {\n`;
+      const obj = classes.get(name);
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) continue;
 
-    for (const key in json) {
-      const value = json[key];
+      const sizeBefore = classes.size;
+      output += buildClass(name, obj, isFactory, includeFromJson, includeToJson, classes) + '\n';
 
-      let type = "dynamic";
-
-      if (typeof value === "string") type = "String";
-      else if (typeof value === "number") type = "num";
-      else if (typeof value === "boolean") type = "bool";
-      else if (
-        typeof value === "object" &&
-        !Array.isArray(value)
-      ) {
-        type = getChildClassName(key);
-      }
-
-      output += isFactory
-        ? `  final ${type}? ${key};\n`
-        : `  ${type}? ${key};\n`;
-    }
-
-    output += `\n  ${toPascalCase(mainClass)}({\n`;
-
-    for (const key in json) {
-      output += `    this.${key},\n`;
-    }
-
-    output += `  });\n`;
-
-    if (includeFromJson) {
-      output += `
-  ${isFactory ? "factory " : ""}
-${toPascalCase(mainClass)}.fromJson(Map<String, dynamic> json) {
-`;
-
-      if (isFactory) {
-        output += `    return ${toPascalCase(mainClass)}(\n`;
-
-        for (const key in json) {
-          output += `      ${key}: json['${key}'],\n`;
-        }
-
-        output += `    );\n`;
-      } else {
-        for (const key in json) {
-          output += `    ${key} = json['${key}'];\n`;
-        }
-      }
-
-      output += `  }\n`;
-    }
-
-    if (includeToJson) {
-      output += `
-  Map<String, dynamic> toJson() {
-    return {
-`;
-
-      for (const key in json) {
-        output += `      '${key}': ${key},\n`;
-      }
-
-      output += `    };
-  }
-`;
-    }
-
-    output += `}\n`;
-
-    for (const key in json) {
-      if (
-        typeof json[key] === "object" &&
-        !Array.isArray(json[key])
-      ) {
-        output += `\nclass ${getChildClassName(key)} {\n`;
-
-        for (const nestedKey in json[key]) {
-          output += `  dynamic? ${nestedKey};\n`;
-        }
-
-        output += `}\n`;
+      // Enqueue any newly discovered classes
+      for (const [k] of classes) {
+        if (!processed.has(k)) queue.push(k);
       }
     }
 
-    outputEditor.setValue(output);
+    outputEditor.setValue(output.trimEnd());
+    document.getElementById('outputDot').classList.add('active');
   } catch (e) {
     outputEditor.setValue(`// Invalid JSON\n// ${e.message}`);
+    document.getElementById('outputDot').classList.remove('active');
   }
 }
 
 function copyGeneratedCode() {
-  navigator.clipboard.writeText(outputEditor.getValue());
-  showToast("Copied successfully ✓");
+  const val = outputEditor.getValue();
+  if (!val) return;
+  navigator.clipboard.writeText(val);
+  showToast("Copied to clipboard");
 }
 </script>
-
 </body>
 </html>
