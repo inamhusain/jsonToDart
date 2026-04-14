@@ -16,36 +16,71 @@
       color: white;
       margin: 0;
       padding: 24px;
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
     }
 
     .header {
       display: flex;
       align-items: center;
       gap: 14px;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
+      animation: slideIn 0.5s ease;
     }
 
     .flutter-icon {
       width: 42px;
       height: 42px;
+      transition: transform 0.3s ease;
+    }
+
+    .flutter-icon:hover {
+      transform: rotate(-8deg) scale(1.08);
     }
 
     h1 {
       margin: 0;
       font-size: 28px;
+      font-weight: 700;
     }
 
     .controls {
       display: flex;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 20px;
       flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 24px;
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+      animation: fadeIn 0.7s ease;
     }
 
     .styled-input {
-      flex: 1;
-      min-width: 280px;
+      min-width: 220px;
       padding: 14px 18px;
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 14px;
@@ -58,36 +93,56 @@
       box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     }
 
+    .styled-input::placeholder {
+      color: rgba(255,255,255,0.5);
+    }
+
     .styled-input:focus {
       border-color: rgba(99,102,241,0.7);
       box-shadow: 0 0 0 4px rgba(99,102,241,0.18);
+      transform: translateY(-1px);
     }
 
     .checkbox {
       display: flex;
       align-items: center;
       gap: 8px;
-      background: rgba(255,255,255,0.08);
       padding: 12px 16px;
       border-radius: 12px;
+      background: rgba(255,255,255,0.08);
       font-size: 14px;
+      cursor: pointer;
+      transition: 0.25s ease;
+      user-select: none;
+    }
+
+    .checkbox:hover {
+      transform: translateY(-1px);
+      background: rgba(255,255,255,0.11);
     }
 
     button {
-      padding: 14px 24px;
+      padding: 14px 22px;
       border: none;
       border-radius: 12px;
       background: #6366f1;
       color: white;
       font-weight: 600;
       cursor: pointer;
+      transition: 0.25s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99,102,241,0.25);
     }
 
     .container {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 20px;
-      height: calc(100vh - 180px);
+      height: calc(100vh - 240px);
+      animation: fadeIn 0.8s ease;
     }
 
     #jsonEditor,
@@ -95,6 +150,12 @@
       border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      transition: 0.3s ease;
+    }
+
+    #jsonEditor:hover,
+    #outputEditor:hover {
+      transform: translateY(-2px);
     }
 
     .toast {
@@ -117,6 +178,18 @@
       opacity: 1;
       transform: translateY(0);
     }
+
+    @media (max-width: 900px) {
+      .container {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+
+      #jsonEditor,
+      #outputEditor {
+        min-height: 400px;
+      }
+    }
   </style>
 
   <script src="https://unpkg.com/monaco-editor@0.52.2/min/vs/loader.js"></script>
@@ -133,7 +206,19 @@
 </div>
 
 <div class="controls">
-  <input id="classNameInput" class="styled-input" placeholder="Enter main class name" />
+  <input id="classNameInput" class="styled-input" placeholder="Main class name" />
+
+  <label class="checkbox">
+    <input type="checkbox" id="usePrefixCheck" onchange="togglePrefixField()" />
+    Prefix Child Classes
+  </label>
+
+  <input
+    id="prefixInput"
+    class="styled-input"
+    placeholder="Prefix (e.g. Api)"
+    style="display:none;"
+  />
 
   <label class="checkbox">
     <input type="radio" name="modelStyle" id="manualStyle" checked />
@@ -184,9 +269,7 @@ require(["vs/editor/editor.main"], function () {
     automaticLayout: true,
     minimap: { enabled: true },
     folding: true,
-    lineNumbers: "on",
-    formatOnPaste: true,
-    formatOnType: true
+    lineNumbers: "on"
   });
 
   outputEditor = monaco.editor.create(document.getElementById("outputEditor"), {
@@ -194,16 +277,16 @@ require(["vs/editor/editor.main"], function () {
     language: "dart",
     theme: "vs-dark",
     readOnly: true,
-    automaticLayout: true,
-    minimap: { enabled: true },
-    folding: true,
-    lineNumbers: "on"
-  });
-
-  jsonEditor.onDidChangeModelContent(() => {
-    validateJsonLive();
+    automaticLayout: true
   });
 });
+
+function togglePrefixField() {
+  const checkbox = document.getElementById("usePrefixCheck");
+  const prefixInput = document.getElementById("prefixInput");
+
+  prefixInput.style.display = checkbox.checked ? "block" : "none";
+}
 
 function showToast(message) {
   const toast = document.getElementById("toast");
@@ -215,187 +298,126 @@ function showToast(message) {
   }, 1800);
 }
 
-function validateJsonLive() {
-  const text = jsonEditor.getValue();
-
-  try {
-    JSON.parse(text);
-    monaco.editor.setModelMarkers(jsonEditor.getModel(), "json", []);
-  } catch (e) {
-    const match = e.message.match(/position (\d+)/);
-    if (!match) return;
-
-    const pos = jsonEditor.getModel().getPositionAt(Number(match[1]));
-
-    monaco.editor.setModelMarkers(jsonEditor.getModel(), "json", [{
-      startLineNumber: pos.lineNumber,
-      startColumn: pos.column,
-      endLineNumber: pos.lineNumber,
-      endColumn: pos.column + 1,
-      message: e.message,
-      severity: monaco.MarkerSeverity.Error
-    }]);
-  }
-}
-
 function toPascalCase(str) {
-  return str
-    .replace(/[_-](.)/g, (_, c) => c.toUpperCase())
-    .replace(/\s+(.)/g, (_, c) => c.toUpperCase())
-    .replace(/^(.)/, (_, c) => c.toUpperCase());
+  return str.replace(/[_-](.)/g, (_, c) => c.toUpperCase())
+            .replace(/\s+(.)/g, (_, c) => c.toUpperCase())
+            .replace(/^(.)/, (_, c) => c.toUpperCase());
 }
 
-function toCamelCase(str) {
-  const pascal = toPascalCase(str);
-  return pascal.charAt(0).toLowerCase() + pascal.slice(1);
-}
+function getChildClassName(name) {
+  const usePrefix = document.getElementById("usePrefixCheck").checked;
+  const prefix = document.getElementById("prefixInput").value.trim();
 
-function primitiveType(value) {
-  if (value === null) return 'dynamic';
-
-  switch (typeof value) {
-    case 'string': return 'String';
-    case 'number': return Number.isInteger(value) ? 'int' : 'double';
-    case 'boolean': return 'bool';
-    default: return 'dynamic';
-  }
-}
-
-function getType(value, key, classes, options) {
-  if (Array.isArray(value)) {
-    if (!value.length) return 'List<dynamic>';
-
-    const first = value[0];
-
-    if (typeof first === 'object' && first !== null) {
-      const className = toPascalCase(key);
-      generateClass(className, first, classes, options);
-      return `List<${className}>`;
-    }
-
-    return `List<${primitiveType(first)}>`;
+  if (!usePrefix || !prefix) {
+    return toPascalCase(name);
   }
 
-  if (typeof value === 'object' && value !== null) {
-    const className = toPascalCase(key);
-    generateClass(className, value, classes, options);
-    return className;
-  }
-
-  return primitiveType(value);
-}
-
-function generateClass(className, json, classes, options) {
-  if (classes[className]) return;
-
-  const isFactory = options.style === 'factory';
-
-  let fields = '';
-  let constructor = '';
-  let fromJsonFields = '';
-  let toJsonFields = '';
-  let factoryFields = '';
-
-  for (const key in json) {
-    const value = json[key];
-    const type = getType(value, key, classes, options);
-    const fieldName = toCamelCase(key);
-
-    fields += isFactory
-      ? `  final ${type}? ${fieldName};\n`
-      : `  ${type}? ${fieldName};\n`;
-
-    constructor += `    this.${fieldName},\n`;
-
-    if (type.startsWith('List<')) {
-      const inner = type.match(/List<(.*)>/)[1];
-
-      if (Array.isArray(value) && value.length && typeof value[0] === 'object') {
-        const listCode = `(json['${key}'] as List<dynamic>?)
-        ?.map((e) => ${inner}.fromJson(e as Map<String, dynamic>))
-        .toList()`;
-
-        fromJsonFields += `    ${fieldName} = ${listCode};\n`;
-        factoryFields += `      ${fieldName}: ${listCode},\n`;
-        toJsonFields += `      '${key}': ${fieldName}?.map((e) => e.toJson()).toList(),\n`;
-      } else {
-        fromJsonFields += `    ${fieldName} = (json['${key}'] as List<dynamic>?)
-        ?.map((e) => e as ${inner})
-        .toList();\n`;
-
-        factoryFields += `      ${fieldName}: (json['${key}'] as List<dynamic>?)
-        ?.map((e) => e as ${inner})
-        .toList(),\n`;
-
-        toJsonFields += `      '${key}': ${fieldName},\n`;
-      }
-    } else if (typeof value === 'object' && value !== null) {
-      const objectCode = `json['${key}'] != null
-        ? ${type}.fromJson(json['${key}'] as Map<String, dynamic>)
-        : null`;
-
-      fromJsonFields += `    ${fieldName} = ${objectCode};\n`;
-      factoryFields += `      ${fieldName}: ${objectCode},\n`;
-      toJsonFields += `      '${key}': ${fieldName}?.toJson(),\n`;
-    } else {
-      fromJsonFields += `    ${fieldName} = json['${key}'] as ${type}?;\n`;
-      factoryFields += `      ${fieldName}: json['${key}'] as ${type}?,\n`;
-      toJsonFields += `      '${key}': ${fieldName},\n`;
-    }
-  }
-
-  let methods = '';
-
-  if (options.fromJson) {
-    methods += isFactory
-      ? `
-  factory ${className}.fromJson(Map<String, dynamic> json) {
-    return ${className}(
-${factoryFields}    );
-  }
-`
-      : `
-  ${className}.fromJson(Map<String, dynamic> json) {
-${fromJsonFields}  }
-`;
-  }
-
-  if (options.toJson) {
-    methods += `
-  Map<String, dynamic> toJson() {
-    return {
-${toJsonFields}    };
-  }
-`;
-  }
-
-  classes[className] = `
-class ${className} {
-${fields}
-  ${className}({
-${constructor}  });
-${methods}
-}
-`;
+  return `${toPascalCase(prefix)}${toPascalCase(name)}`;
 }
 
 function generateDart() {
   try {
     const json = JSON.parse(jsonEditor.getValue());
 
-    const classes = {};
-    const className =
-      document.getElementById("classNameInput").value.trim() || "RootModel";
+    const mainClass =
+      document.getElementById("classNameInput").value.trim() ||
+      "RootModel";
 
-    generateClass(toPascalCase(className), json, classes, {
-      style: document.getElementById("factoryStyle").checked ? "factory" : "manual",
-      fromJson: document.getElementById("fromJsonCheck").checked,
-      toJson: document.getElementById("toJsonCheck").checked
-    });
+    const isFactory =
+      document.getElementById("factoryStyle").checked;
 
-    outputEditor.setValue(
-      Object.values(classes).reverse().join("\n")
-    );
+    const includeFromJson =
+      document.getElementById("fromJsonCheck").checked;
+
+    const includeToJson =
+      document.getElementById("toJsonCheck").checked;
+
+    let output = `class ${toPascalCase(mainClass)} {\n`;
+
+    for (const key in json) {
+      const value = json[key];
+
+      let type = "dynamic";
+
+      if (typeof value === "string") type = "String";
+      else if (typeof value === "number") type = "num";
+      else if (typeof value === "boolean") type = "bool";
+      else if (
+        typeof value === "object" &&
+        !Array.isArray(value)
+      ) {
+        type = getChildClassName(key);
+      }
+
+      output += isFactory
+        ? `  final ${type}? ${key};\n`
+        : `  ${type}? ${key};\n`;
+    }
+
+    output += `\n  ${toPascalCase(mainClass)}({\n`;
+
+    for (const key in json) {
+      output += `    this.${key},\n`;
+    }
+
+    output += `  });\n`;
+
+    if (includeFromJson) {
+      output += `
+  ${isFactory ? "factory " : ""}
+${toPascalCase(mainClass)}.fromJson(Map<String, dynamic> json) {
+`;
+
+      if (isFactory) {
+        output += `    return ${toPascalCase(mainClass)}(\n`;
+
+        for (const key in json) {
+          output += `      ${key}: json['${key}'],\n`;
+        }
+
+        output += `    );\n`;
+      } else {
+        for (const key in json) {
+          output += `    ${key} = json['${key}'];\n`;
+        }
+      }
+
+      output += `  }\n`;
+    }
+
+    if (includeToJson) {
+      output += `
+  Map<String, dynamic> toJson() {
+    return {
+`;
+
+      for (const key in json) {
+        output += `      '${key}': ${key},\n`;
+      }
+
+      output += `    };
+  }
+`;
+    }
+
+    output += `}\n`;
+
+    for (const key in json) {
+      if (
+        typeof json[key] === "object" &&
+        !Array.isArray(json[key])
+      ) {
+        output += `\nclass ${getChildClassName(key)} {\n`;
+
+        for (const nestedKey in json[key]) {
+          output += `  dynamic? ${nestedKey};\n`;
+        }
+
+        output += `}\n`;
+      }
+    }
+
+    outputEditor.setValue(output);
   } catch (e) {
     outputEditor.setValue(`// Invalid JSON\n// ${e.message}`);
   }
