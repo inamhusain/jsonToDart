@@ -585,6 +585,7 @@
       currentStyle = style;
       document.getElementById('manualBtn').classList.toggle('active', style === 'manual');
       document.getElementById('factoryBtn').classList.toggle('active', style === 'factory');
+      generateDart();
     }
 
     function togglePill(pill, checkId) {
@@ -595,6 +596,7 @@
       if (checkId === 'usePrefixCheck') {
         document.getElementById('prefixWrap').style.display = check.checked ? 'block' : 'none';
       }
+      generateDart();
     }
 
     function showToast(message) {
@@ -729,12 +731,21 @@
 
       // fromJson
       if (includeFromJson) {
-        out += `\n  ${className}.fromJson(Map<String, dynamic> json) {\n`;
-        for (const key of keys) {
-          const cast = castFromJson(key, obj[key], classes);
-          out += `    ${key} = ${cast};\n`;
+        if (isFactory) {
+          out += `\n  factory ${className}.fromJson(Map<String, dynamic> json) => ${className}(\n`;
+          for (const key of keys) {
+            const cast = castFromJson(key, obj[key], classes);
+            out += `    ${key}: ${cast},\n`;
+          }
+          out += `  );\n`;
+        } else {
+          out += `\n  ${className}.fromJson(Map<String, dynamic> json) {\n`;
+          for (const key of keys) {
+            const cast = castFromJson(key, obj[key], classes);
+            out += `    ${key} = ${cast};\n`;
+          }
+          out += `  }\n`;
         }
-        out += `  }\n`;
       }
 
       // Fields
