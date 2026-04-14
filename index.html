@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flutter JSON → Dart Model Generator</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
       font-family: Inter, -apple-system, sans-serif;
@@ -17,7 +22,7 @@
 
     .topbar {
       background: #0d1220;
-      border-bottom: 1px solid rgba(99,179,237,0.15);
+      border-bottom: 1px solid rgba(99, 179, 237, 0.15);
       padding: 0 24px;
       height: 52px;
       display: flex;
@@ -35,8 +40,8 @@
     .topbar-subtitle {
       font-size: 12px;
       color: #54b3f5;
-      background: rgba(84,179,245,0.12);
-      border: 1px solid rgba(84,179,245,0.2);
+      background: rgba(84, 179, 245, 0.12);
+      border: 1px solid rgba(84, 179, 245, 0.2);
       padding: 2px 8px;
       border-radius: 20px;
       margin-left: 4px;
@@ -50,7 +55,7 @@
 
     .toolbar {
       background: #111827;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
       padding: 10px 20px;
       display: flex;
       flex-wrap: wrap;
@@ -67,7 +72,7 @@
     .toolbar-divider {
       width: 1px;
       height: 24px;
-      background: rgba(255,255,255,0.1);
+      background: rgba(255, 255, 255, 0.1);
       margin: 0 4px;
     }
 
@@ -81,7 +86,7 @@
 
     .tb-input {
       background: #1e2a3a;
-      border: 1px solid rgba(99,179,237,0.2);
+      border: 1px solid rgba(99, 179, 237, 0.2);
       border-radius: 8px;
       color: #e2e8f0;
       font-size: 13px;
@@ -91,17 +96,19 @@
       width: 160px;
     }
 
-    .tb-input::placeholder { color: #4a5568; }
+    .tb-input::placeholder {
+      color: #4a5568;
+    }
 
     .tb-input:focus {
       border-color: #54b3f5;
-      box-shadow: 0 0 0 3px rgba(84,179,245,0.1);
+      box-shadow: 0 0 0 3px rgba(84, 179, 245, 0.1);
     }
 
     .toggle-group {
       display: flex;
       background: #1a2332;
-      border: 1px solid rgba(255,255,255,0.08);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 8px;
       overflow: hidden;
     }
@@ -121,13 +128,15 @@
     .toggle-btn:not(:last-child)::after {
       content: '';
       position: absolute;
-      right: 0; top: 20%; bottom: 20%;
+      right: 0;
+      top: 20%;
+      bottom: 20%;
       width: 1px;
-      background: rgba(255,255,255,0.08);
+      background: rgba(255, 255, 255, 0.08);
     }
 
     .toggle-btn.active {
-      background: rgba(84,179,245,0.15);
+      background: rgba(84, 179, 245, 0.15);
       color: #54b3f5;
     }
 
@@ -141,21 +150,29 @@
       font-weight: 500;
       color: #94a3b8;
       background: #1a2332;
-      border: 1px solid rgba(255,255,255,0.08);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       cursor: pointer;
       transition: all 0.15s;
       user-select: none;
     }
 
-    .cb-pill:hover { background: #1e2a3a; color: #cbd5e0; }
+    .cb-pill:hover {
+      background: #1e2a3a;
+      color: #cbd5e0;
+    }
 
-    .cb-pill input { display: none; }
+    .cb-pill input {
+      display: none;
+    }
 
     .cb-dot {
-      width: 14px; height: 14px;
+      width: 14px;
+      height: 14px;
       border-radius: 4px;
       border: 1.5px solid #4a5568;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: all 0.15s;
       flex-shrink: 0;
     }
@@ -167,13 +184,18 @@
 
     .cb-pill.checked .cb-dot::after {
       content: '';
-      width: 7px; height: 5px;
+      width: 7px;
+      height: 5px;
       border-left: 1.5px solid #0a0e1a;
       border-bottom: 1.5px solid #0a0e1a;
       transform: rotate(-45deg) translateY(-1px);
     }
 
-    .cb-pill.checked { color: #54b3f5; border-color: rgba(84,179,245,0.3); background: rgba(84,179,245,0.08); }
+    .cb-pill.checked {
+      color: #54b3f5;
+      border-color: rgba(84, 179, 245, 0.3);
+      background: rgba(84, 179, 245, 0.08);
+    }
 
     .btn-generate {
       padding: 8px 18px;
@@ -190,12 +212,18 @@
       gap: 6px;
     }
 
-    .btn-generate:hover { background: #2563eb; transform: translateY(-1px); }
-    .btn-generate:active { transform: scale(0.97); }
+    .btn-generate:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+    }
+
+    .btn-generate:active {
+      transform: scale(0.97);
+    }
 
     .btn-copy {
       padding: 8px 14px;
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 8px;
       background: transparent;
       color: #94a3b8;
@@ -208,7 +236,10 @@
       gap: 5px;
     }
 
-    .btn-copy:hover { background: rgba(255,255,255,0.06); color: #e2e8f0; }
+    .btn-copy:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #e2e8f0;
+    }
 
     .editors-wrap {
       display: grid;
@@ -220,14 +251,16 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      border-right: 1px solid rgba(255,255,255,0.07);
+      border-right: 1px solid rgba(255, 255, 255, 0.07);
     }
 
-    .editor-pane:last-child { border-right: none; }
+    .editor-pane:last-child {
+      border-right: none;
+    }
 
     .pane-header {
       background: #111827;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
       padding: 8px 16px;
       display: flex;
       align-items: center;
@@ -253,18 +286,31 @@
       letter-spacing: 0.03em;
     }
 
-    .lang-json { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.2); }
-    .lang-dart { background: rgba(84,179,245,0.12); color: #54b3f5; border: 1px solid rgba(84,179,245,0.2); }
+    .lang-json {
+      background: rgba(251, 191, 36, 0.12);
+      color: #fbbf24;
+      border: 1px solid rgba(251, 191, 36, 0.2);
+    }
+
+    .lang-dart {
+      background: rgba(84, 179, 245, 0.12);
+      color: #54b3f5;
+      border: 1px solid rgba(84, 179, 245, 0.2);
+    }
 
     .pane-dot {
-      width: 7px; height: 7px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: #2d3748;
     }
 
-    .pane-dot.active { background: #48bb78; }
+    .pane-dot.active {
+      background: #48bb78;
+    }
 
-    #jsonEditor, #outputEditor {
+    #jsonEditor,
+    #outputEditor {
       flex: 1;
       min-height: 0;
     }
@@ -274,7 +320,7 @@
       bottom: 20px;
       right: 20px;
       background: #1a3a2a;
-      border: 1px solid rgba(72,187,120,0.35);
+      border: 1px solid rgba(72, 187, 120, 0.35);
       color: #68d391;
       padding: 10px 16px;
       border-radius: 10px;
@@ -290,7 +336,10 @@
       gap: 7px;
     }
 
-    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
 
     .prefix-wrap {
       display: none;
@@ -298,382 +347,432 @@
     }
 
     @keyframes fadeSlide {
-      from { opacity: 0; transform: translateX(-6px); }
-      to { opacity: 1; transform: translateX(0); }
+      from {
+        opacity: 0;
+        transform: translateX(-6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
     }
 
     @media (max-width: 800px) {
-      .editors-wrap { grid-template-columns: 1fr; height: auto; }
-      #jsonEditor, #outputEditor { height: 45vh; }
+      .editors-wrap {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+
+      #jsonEditor,
+      #outputEditor {
+        height: 45vh;
+      }
     }
   </style>
 
   <script src="https://unpkg.com/monaco-editor@0.52.2/min/vs/loader.js"></script>
 </head>
+
 <body>
 
-<div class="topbar">
-  <svg class="flutter-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M14.314 0L2 12.314l3.686 3.686L21.686 0h-7.372Z" fill="#42A5F5"/>
-    <path d="M5.686 16L9.372 19.686 21.686 7.372V0L5.686 16Z" fill="#1E88E5"/>
-    <path d="M9.372 19.686L14.314 24h7.372L13.058 15.372l-3.686 4.314Z" fill="#42A5F5"/>
-    <path d="M13.058 15.372L9.372 19.686l2.314 2.314 5.372-5.37-4.0-1.258Z" fill="#0D47A1" opacity="0.5"/>
-  </svg>
-  <span class="topbar-title">JSON → Dart Model Generator</span>
-  <span class="topbar-subtitle">Flutter</span>
-</div>
-
-<div class="toolbar">
-  <div class="toolbar-group">
-    <span class="tb-label">Class</span>
-    <input id="classNameInput" class="tb-input" placeholder="Root class name" />
+  <div class="topbar">
+    <svg class="flutter-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14.314 0L2 12.314l3.686 3.686L21.686 0h-7.372Z" fill="#42A5F5" />
+      <path d="M5.686 16L9.372 19.686 21.686 7.372V0L5.686 16Z" fill="#1E88E5" />
+      <path d="M9.372 19.686L14.314 24h7.372L13.058 15.372l-3.686 4.314Z" fill="#42A5F5" />
+      <path d="M13.058 15.372L9.372 19.686l2.314 2.314 5.372-5.37-4.0-1.258Z" fill="#0D47A1" opacity="0.5" />
+    </svg>
+    <span class="topbar-title">JSON → Dart Model Generator</span>
+    <span class="topbar-subtitle">Flutter</span>
   </div>
 
-  <div class="toolbar-divider"></div>
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <span class="tb-label">Class</span>
+      <input id="classNameInput" class="tb-input" placeholder="Root class name" />
+    </div>
 
-  <div class="toolbar-group">
-    <span class="tb-label">Style</span>
-    <div class="toggle-group">
-      <button class="toggle-btn active" id="manualBtn" onclick="setStyle('manual')">Manual</button>
-      <button class="toggle-btn" id="factoryBtn" onclick="setStyle('factory')">Factory</button>
+    <div class="toolbar-divider"></div>
+
+    <div class="toolbar-group">
+      <span class="tb-label">Style</span>
+      <div class="toggle-group">
+        <button class="toggle-btn active" id="manualBtn" onclick="setStyle('manual')">Manual</button>
+        <button class="toggle-btn" id="factoryBtn" onclick="setStyle('factory')">Factory</button>
+      </div>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <div class="toolbar-group">
+      <label class="cb-pill checked" id="fromJsonPill" onclick="togglePill(this,'fromJsonCheck')">
+        <input type="checkbox" id="fromJsonCheck" checked />
+        <span class="cb-dot"></span>
+        fromJson
+      </label>
+      <label class="cb-pill checked" id="toJsonPill" onclick="togglePill(this,'toJsonCheck')">
+        <input type="checkbox" id="toJsonCheck" checked />
+        <span class="cb-dot"></span>
+        toJson
+      </label>
+      <label class="cb-pill" id="prefixPill" onclick="togglePill(this,'usePrefixCheck')">
+        <input type="checkbox" id="usePrefixCheck" />
+        <span class="cb-dot"></span>
+        Prefix
+      </label>
+    </div>
+
+    <div class="prefix-wrap" id="prefixWrap">
+      <input id="prefixInput" class="tb-input" placeholder="Prefix (e.g. Api)" style="width:130px;" />
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <div class="toolbar-group">
+      <button class="btn-generate" onclick="generateDart()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+          <polygon points="4,2 14,8 4,14" fill="white" />
+        </svg>
+        Generate
+      </button>
+      <button class="btn-copy" onclick="copyGeneratedCode()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="5" y="5" width="9" height="9" rx="2" />
+          <path d="M3 11V3a2 2 0 012-2h8" />
+        </svg>
+        Copy
+      </button>
     </div>
   </div>
 
-  <div class="toolbar-divider"></div>
-
-  <div class="toolbar-group">
-    <label class="cb-pill checked" id="fromJsonPill" onclick="togglePill(this,'fromJsonCheck')">
-      <input type="checkbox" id="fromJsonCheck" checked />
-      <span class="cb-dot"></span>
-      fromJson
-    </label>
-    <label class="cb-pill checked" id="toJsonPill" onclick="togglePill(this,'toJsonCheck')">
-      <input type="checkbox" id="toJsonCheck" checked />
-      <span class="cb-dot"></span>
-      toJson
-    </label>
-    <label class="cb-pill" id="prefixPill" onclick="togglePill(this,'usePrefixCheck')">
-      <input type="checkbox" id="usePrefixCheck" />
-      <span class="cb-dot"></span>
-      Prefix
-    </label>
-  </div>
-
-  <div class="prefix-wrap" id="prefixWrap">
-    <input id="prefixInput" class="tb-input" placeholder="Prefix (e.g. Api)" style="width:130px;" />
-  </div>
-
-  <div class="toolbar-divider"></div>
-
-  <div class="toolbar-group">
-    <button class="btn-generate" onclick="generateDart()">
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polygon points="4,2 14,8 4,14" fill="white"/></svg>
-      Generate
-    </button>
-    <button class="btn-copy" onclick="copyGeneratedCode()">
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="2"/><path d="M3 11V3a2 2 0 012-2h8"/></svg>
-      Copy
-    </button>
-  </div>
-</div>
-
-<div class="editors-wrap">
-  <div class="editor-pane">
-    <div class="pane-header">
-      <span class="pane-title">
-        <span class="pane-dot active"></span>
-        Input
-        <span class="lang-badge lang-json">JSON</span>
-      </span>
+  <div class="editors-wrap">
+    <div class="editor-pane">
+      <div class="pane-header">
+        <span class="pane-title">
+          <span class="pane-dot active"></span>
+          Input
+          <span class="lang-badge lang-json">JSON</span>
+        </span>
+      </div>
+      <div id="jsonEditor"></div>
     </div>
-    <div id="jsonEditor"></div>
-  </div>
 
-  <div class="editor-pane">
-    <div class="pane-header">
-      <span class="pane-title">
-        <span class="pane-dot" id="outputDot"></span>
-        Output
-        <span class="lang-badge lang-dart">Dart</span>
-      </span>
+    <div class="editor-pane">
+      <div class="pane-header">
+        <span class="pane-title">
+          <span class="pane-dot" id="outputDot"></span>
+          Output
+          <span class="lang-badge lang-dart">Dart</span>
+        </span>
+      </div>
+      <div id="outputEditor"></div>
     </div>
-    <div id="outputEditor"></div>
   </div>
-</div>
 
-<div id="toast" class="toast">
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#68d391" stroke-width="2"><polyline points="2,8 6,12 14,4"/></svg>
-  Copied to clipboard
-</div>
+  <div id="toast" class="toast">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#68d391" stroke-width="2">
+      <polyline points="2,8 6,12 14,4" />
+    </svg>
+    Copied to clipboard
+  </div>
 
-<script>
-let jsonEditor, outputEditor;
-let currentStyle = 'manual';
+  <script>
+    let jsonEditor, outputEditor;
+    let currentStyle = 'manual';
 
-require.config({ paths: { vs: "https://unpkg.com/monaco-editor@0.52.2/min/vs" } });
+    require.config({ paths: { vs: "https://unpkg.com/monaco-editor@0.52.2/min/vs" } });
 
-require(["vs/editor/editor.main"], function () {
-  const darkTheme = {
-    base: 'vs-dark',
-    inherit: true,
-    rules: [
-      { token: 'comment', foreground: '4a5568' },
-      { token: 'keyword', foreground: '54b3f5' },
-      { token: 'string', foreground: 'a8d8a8' },
-      { token: 'number', foreground: 'fbbf24' },
-      { token: 'type', foreground: 'c084fc' },
-    ],
-    colors: {
-      'editor.background': '#0a0e1a',
-      'editor.foreground': '#e2e8f0',
-      'editorLineNumber.foreground': '#2d3748',
-      'editorLineNumber.activeForeground': '#64748b',
-      'editor.selectionBackground': '#1d4ed840',
-      'editor.lineHighlightBackground': '#111827',
-      'editorCursor.foreground': '#54b3f5',
-      'editorIndentGuide.background': '#1e2a3a',
-      'editorGutter.background': '#0a0e1a',
-      'scrollbarSlider.background': '#1e2a3a',
-      'scrollbarSlider.hoverBackground': '#2d3748',
+    require(["vs/editor/editor.main"], function () {
+      const darkTheme = {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [
+          { token: 'comment', foreground: '4a5568' },
+          { token: 'keyword', foreground: '54b3f5' },
+          { token: 'string', foreground: 'a8d8a8' },
+          { token: 'number', foreground: 'fbbf24' },
+          { token: 'type', foreground: 'c084fc' },
+        ],
+        colors: {
+          'editor.background': '#0a0e1a',
+          'editor.foreground': '#e2e8f0',
+          'editorLineNumber.foreground': '#2d3748',
+          'editorLineNumber.activeForeground': '#64748b',
+          'editor.selectionBackground': '#1d4ed840',
+          'editor.lineHighlightBackground': '#111827',
+          'editorCursor.foreground': '#54b3f5',
+          'editorIndentGuide.background': '#1e2a3a',
+          'editorGutter.background': '#0a0e1a',
+          'scrollbarSlider.background': '#1e2a3a',
+          'scrollbarSlider.hoverBackground': '#2d3748',
+        }
+      };
+
+      monaco.editor.defineTheme('flutterDark', darkTheme);
+
+      const sharedOpts = {
+        theme: 'flutterDark',
+        automaticLayout: true,
+        minimap: { enabled: false },
+        scrollBeyondLastLine: false,
+        fontSize: 13,
+        lineHeight: 22,
+        fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
+        fontLigatures: true,
+        padding: { top: 16, bottom: 16 },
+        renderLineHighlight: 'gutter',
+        lineNumbers: 'on',
+        folding: true,
+        bracketPairColorization: { enabled: true },
+        smoothScrolling: true,
+        cursorBlinking: 'smooth',
+        cursorSmoothCaretAnimation: true,
+      };
+
+      jsonEditor = monaco.editor.create(document.getElementById("jsonEditor"), {
+        ...sharedOpts,
+        value: '{\n  "id": 1,\n  "name": "Flutter",\n  "isActive": true,\n  "score": 9.5,\n  "address": {\n    "city": "San Francisco",\n    "zip": "94102"\n  }\n}',
+        language: "json",
+      });
+
+      outputEditor = monaco.editor.create(document.getElementById("outputEditor"), {
+        ...sharedOpts,
+        value: '',
+        language: "dart",
+        readOnly: true,
+      });
+    });
+
+    function setStyle(style) {
+      currentStyle = style;
+      document.getElementById('manualBtn').classList.toggle('active', style === 'manual');
+      document.getElementById('factoryBtn').classList.toggle('active', style === 'factory');
     }
-  };
 
-  monaco.editor.defineTheme('flutterDark', darkTheme);
+    function togglePill(pill, checkId) {
+      const check = document.getElementById(checkId);
+      check.checked = !check.checked;
+      pill.classList.toggle('checked', check.checked);
 
-  const sharedOpts = {
-    theme: 'flutterDark',
-    automaticLayout: true,
-    minimap: { enabled: false },
-    scrollBeyondLastLine: false,
-    fontSize: 13,
-    lineHeight: 22,
-    fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
-    fontLigatures: true,
-    padding: { top: 16, bottom: 16 },
-    renderLineHighlight: 'gutter',
-    lineNumbers: 'on',
-    folding: true,
-    bracketPairColorization: { enabled: true },
-    smoothScrolling: true,
-    cursorBlinking: 'smooth',
-    cursorSmoothCaretAnimation: true,
-  };
-
-  jsonEditor = monaco.editor.create(document.getElementById("jsonEditor"), {
-    ...sharedOpts,
-    value: '{\n  "id": 1,\n  "name": "Flutter",\n  "isActive": true,\n  "score": 9.5,\n  "address": {\n    "city": "San Francisco",\n    "zip": "94102"\n  }\n}',
-    language: "json",
-  });
-
-  outputEditor = monaco.editor.create(document.getElementById("outputEditor"), {
-    ...sharedOpts,
-    value: '',
-    language: "dart",
-    readOnly: true,
-  });
-});
-
-function setStyle(style) {
-  currentStyle = style;
-  document.getElementById('manualBtn').classList.toggle('active', style === 'manual');
-  document.getElementById('factoryBtn').classList.toggle('active', style === 'factory');
-}
-
-function togglePill(pill, checkId) {
-  const check = document.getElementById(checkId);
-  check.checked = !check.checked;
-  pill.classList.toggle('checked', check.checked);
-
-  if (checkId === 'usePrefixCheck') {
-    document.getElementById('prefixWrap').style.display = check.checked ? 'block' : 'none';
-  }
-}
-
-function showToast(message) {
-  const toast = document.getElementById("toast");
-  toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 2000);
-}
-
-function toPascalCase(str) {
-  return str.replace(/[_-](.)/g, (_, c) => c.toUpperCase())
-            .replace(/\s+(.)/g, (_, c) => c.toUpperCase())
-            .replace(/^(.)/, (_, c) => c.toUpperCase());
-}
-
-function getPrefix() {
-  const usePrefix = document.getElementById("usePrefixCheck").checked;
-  const prefix = document.getElementById("prefixInput").value.trim();
-  return (usePrefix && prefix) ? toPascalCase(prefix) : '';
-}
-
-function getClassName(name) {
-  return getPrefix() + toPascalCase(name);
-}
-
-// Infer Dart type string for a JSON value, collecting needed sub-classes
-function inferType(key, value, classes) {
-  if (value === null || value === undefined) return 'dynamic';
-  if (typeof value === 'string') return 'String';
-  if (typeof value === 'boolean') return 'bool';
-  if (typeof value === 'number') return Number.isInteger(value) ? 'int' : 'double';
-  if (Array.isArray(value)) {
-    if (value.length === 0) return 'List<dynamic>';
-    const first = value[0];
-    const inner = inferType(key, first, classes);
-    return `List<${inner}>`;
-  }
-  if (typeof value === 'object') {
-    const className = getClassName(key);
-    // Schedule class generation if not already queued
-    if (!classes.has(className)) {
-      classes.set(className, value);
-    }
-    return className;
-  }
-  return 'dynamic';
-}
-
-// Cast expression for fromJson
-function castFromJson(key, value, classes) {
-  if (value === null || value === undefined) return `json['${key}']`;
-  if (typeof value === 'string') return `json['${key}'] as String?`;
-  if (typeof value === 'boolean') return `json['${key}'] as bool?`;
-  if (typeof value === 'number') {
-    const t = Number.isInteger(value) ? 'int' : 'double';
-    return `json['${key}'] as ${t}?`;
-  }
-  if (Array.isArray(value)) {
-    if (value.length === 0) return `json['${key}'] as List<dynamic>?`;
-    const first = value[0];
-    if (typeof first === 'string') {
-      return `(json['${key}'] as List<dynamic>?)?.map((e) => e as String).toList()`;
-    }
-    if (typeof first === 'number') {
-      const t = Number.isInteger(first) ? 'int' : 'double';
-      return `(json['${key}'] as List<dynamic>?)?.map((e) => e as ${t}).toList()`;
-    }
-    if (typeof first === 'boolean') {
-      return `(json['${key}'] as List<dynamic>?)?.map((e) => e as bool).toList()`;
-    }
-    if (typeof first === 'object' && first !== null && !Array.isArray(first)) {
-      const cn = getClassName(key);
-      return `(json['${key}'] as List<dynamic>?)\n        ?.map((e) => ${cn}.fromJson(e as Map<String, dynamic>))\n        .toList()`;
-    }
-    return `json['${key}'] as List<dynamic>?`;
-  }
-  if (typeof value === 'object') {
-    const cn = getClassName(key);
-    return `json['${key}'] != null\n        ? ${cn}.fromJson(json['${key}'] as Map<String, dynamic>)\n        : null`;
-  }
-  return `json['${key}']`;
-}
-
-// Cast expression for toJson
-function castToJson(key, value) {
-  if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' && value[0] !== null) {
-    return `${key}?.map((e) => e.toJson()).toList()`;
-  }
-  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-    return `${key}?.toJson()`;
-  }
-  return key;
-}
-
-// Generate a single class block
-function buildClass(className, obj, isFactory, includeFromJson, includeToJson, classes) {
-  const keys = Object.keys(obj);
-  let out = `class ${className} {\n`;
-
-  // Constructor
-  out += `  ${className}({\n`;
-  for (const key of keys) {
-    out += `    this.${key},\n`;
-  }
-  out += `  });\n`;
-
-  // fromJson
-  if (includeFromJson) {
-    out += `\n  ${className}.fromJson(Map<String, dynamic> json) {\n`;
-    for (const key of keys) {
-      const cast = castFromJson(key, obj[key], classes);
-      out += `    ${key} = ${cast};\n`;
-    }
-    out += `  }\n`;
-  }
-
-  // Fields
-  out += `\n`;
-  for (const key of keys) {
-    const type = inferType(key, obj[key], classes);
-    out += `  ${type}? ${key};\n`;
-  }
-
-  // toJson
-  if (includeToJson) {
-    out += `\n  Map<String, dynamic> toJson() {\n    return {\n`;
-    for (const key of keys) {
-      const val = castToJson(key, obj[key]);
-      out += `      '${key}': ${val},\n`;
-    }
-    out += `    };\n  }\n`;
-  }
-
-  out += `}\n`;
-  return out;
-}
-
-function generateDart() {
-  try {
-    const json = JSON.parse(jsonEditor.getValue());
-    const mainClassName = toPascalCase(
-      document.getElementById("classNameInput").value.trim() || "RootModel"
-    );
-    const isFactory = currentStyle === 'factory';
-    const includeFromJson = document.getElementById("fromJsonCheck").checked;
-    const includeToJson = document.getElementById("toJsonCheck").checked;
-
-    // We use an ordered Map to track all classes to generate (BFS order)
-    const classes = new Map();
-    classes.set(mainClassName, json);
-
-    let output = '';
-
-    // Process queue — new entries get added inside buildClass via inferType/castFromJson
-    const processed = new Set();
-    const queue = [mainClassName];
-
-    while (queue.length > 0) {
-      const name = queue.shift();
-      if (processed.has(name)) continue;
-      processed.add(name);
-
-      const obj = classes.get(name);
-      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) continue;
-
-      const sizeBefore = classes.size;
-      output += buildClass(name, obj, isFactory, includeFromJson, includeToJson, classes) + '\n';
-
-      // Enqueue any newly discovered classes
-      for (const [k] of classes) {
-        if (!processed.has(k)) queue.push(k);
+      if (checkId === 'usePrefixCheck') {
+        document.getElementById('prefixWrap').style.display = check.checked ? 'block' : 'none';
       }
     }
 
-    outputEditor.setValue(output.trimEnd());
-    document.getElementById('outputDot').classList.add('active');
-  } catch (e) {
-    outputEditor.setValue(`// Invalid JSON\n// ${e.message}`);
-    document.getElementById('outputDot').classList.remove('active');
-  }
-}
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2000);
+    }
 
-function copyGeneratedCode() {
-  const val = outputEditor.getValue();
-  if (!val) return;
-  navigator.clipboard.writeText(val);
-  showToast("Copied to clipboard");
-}
-</script>
+    function toPascalCase(str) {
+      return str.replace(/[_-](.)/g, (_, c) => c.toUpperCase())
+        .replace(/\s+(.)/g, (_, c) => c.toUpperCase())
+        .replace(/^(.)/, (_, c) => c.toUpperCase());
+    }
+
+    function getPrefix() {
+      const usePrefix = document.getElementById("usePrefixCheck").checked;
+      const prefix = document.getElementById("prefixInput").value.trim();
+      return (usePrefix && prefix) ? toPascalCase(prefix) : '';
+    }
+
+    function getClassName(name) {
+      return getPrefix() + toPascalCase(name);
+    }
+
+    function getBaseName(key, isArrayItem) {
+      let baseName = getClassName(key);
+      if (isArrayItem) {
+        baseName += 'Item';
+      }
+      return baseName;
+    }
+
+    function getUniqueClassName(baseName, value, classes) {
+      let className = baseName;
+      let counter = 1;
+      while (classes.has(className)) {
+        const existing = classes.get(className);
+        const existingKeys = Object.keys(existing || {}).sort().join(',');
+        const newKeys = Object.keys(value || {}).sort().join(',');
+        if (existingKeys === newKeys) {
+          return className;
+        }
+        className = `${baseName}${counter}`;
+        counter++;
+      }
+      return className;
+    }
+
+    // Infer Dart type string for a JSON value, collecting needed sub-classes
+    function inferType(key, value, classes, isArrayItem = false) {
+      if (value === null || value === undefined) return 'dynamic';
+      if (typeof value === 'string') return 'String';
+      if (typeof value === 'boolean') return 'bool';
+      if (typeof value === 'number') return Number.isInteger(value) ? 'int' : 'double';
+      if (Array.isArray(value)) {
+        if (value.length === 0) return 'List<dynamic>';
+        const first = value[0];
+        const inner = inferType(key, first, classes, true);
+        return `List<${inner}>`;
+      }
+      if (typeof value === 'object') {
+        const baseName = getBaseName(key, isArrayItem);
+        const className = getUniqueClassName(baseName, value, classes);
+        // Schedule class generation if not already queued
+        if (!classes.has(className)) {
+          classes.set(className, value);
+        }
+        return className;
+      }
+      return 'dynamic';
+    }
+
+    // Cast expression for fromJson
+    function castFromJson(key, value, classes) {
+      if (value === null || value === undefined) return `json['${key}']`;
+      if (typeof value === 'string') return `json['${key}'] as String?`;
+      if (typeof value === 'boolean') return `json['${key}'] as bool?`;
+      if (typeof value === 'number') {
+        const t = Number.isInteger(value) ? 'int' : 'double';
+        return `json['${key}'] as ${t}?`;
+      }
+      if (Array.isArray(value)) {
+        if (value.length === 0) return `json['${key}'] as List<dynamic>?`;
+        const first = value[0];
+        if (typeof first === 'string') {
+          return `(json['${key}'] as List<dynamic>?)?.map((e) => e as String).toList()`;
+        }
+        if (typeof first === 'number') {
+          const t = Number.isInteger(first) ? 'int' : 'double';
+          return `(json['${key}'] as List<dynamic>?)?.map((e) => e as ${t}).toList()`;
+        }
+        if (typeof first === 'boolean') {
+          return `(json['${key}'] as List<dynamic>?)?.map((e) => e as bool).toList()`;
+        }
+        if (typeof first === 'object' && first !== null && !Array.isArray(first)) {
+          const baseName = getBaseName(key, true);
+          const cn = getUniqueClassName(baseName, first, classes);
+          return `(json['${key}'] as List<dynamic>?)\n        ?.map((e) => ${cn}.fromJson(e as Map<String, dynamic>))\n        .toList()`;
+        }
+        return `json['${key}'] as List<dynamic>?`;
+      }
+      if (typeof value === 'object') {
+        const baseName = getBaseName(key, false);
+        const cn = getUniqueClassName(baseName, value, classes);
+        return `json['${key}'] != null\n        ? ${cn}.fromJson(json['${key}'] as Map<String, dynamic>)\n        : null`;
+      }
+      return `json['${key}']`;
+    }
+
+    // Cast expression for toJson
+    function castToJson(key, value) {
+      if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' && value[0] !== null) {
+        return `${key}?.map((e) => e.toJson()).toList()`;
+      }
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        return `${key}?.toJson()`;
+      }
+      return key;
+    }
+
+    // Generate a single class block
+    function buildClass(className, obj, isFactory, includeFromJson, includeToJson, classes) {
+      const keys = Object.keys(obj);
+      let out = `class ${className} {\n`;
+
+      // Constructor
+      out += `  ${className}({\n`;
+      for (const key of keys) {
+        out += `    this.${key},\n`;
+      }
+      out += `  });\n`;
+
+      // fromJson
+      if (includeFromJson) {
+        out += `\n  ${className}.fromJson(Map<String, dynamic> json) {\n`;
+        for (const key of keys) {
+          const cast = castFromJson(key, obj[key], classes);
+          out += `    ${key} = ${cast};\n`;
+        }
+        out += `  }\n`;
+      }
+
+      // Fields
+      out += `\n`;
+      for (const key of keys) {
+        const type = inferType(key, obj[key], classes);
+        out += `  ${type}? ${key};\n`;
+      }
+
+      // toJson
+      if (includeToJson) {
+        out += `\n  Map<String, dynamic> toJson() {\n    return {\n`;
+        for (const key of keys) {
+          const val = castToJson(key, obj[key]);
+          out += `      '${key}': ${val},\n`;
+        }
+        out += `    };\n  }\n`;
+      }
+
+      out += `}\n`;
+      return out;
+    }
+
+    function generateDart() {
+      try {
+        const json = JSON.parse(jsonEditor.getValue());
+        const mainClassName = toPascalCase(
+          document.getElementById("classNameInput").value.trim() || "RootModel"
+        );
+        const isFactory = currentStyle === 'factory';
+        const includeFromJson = document.getElementById("fromJsonCheck").checked;
+        const includeToJson = document.getElementById("toJsonCheck").checked;
+
+        // We use an ordered Map to track all classes to generate (BFS order)
+        const classes = new Map();
+        classes.set(mainClassName, json);
+
+        let output = '';
+
+        // Process queue — new entries get added inside buildClass via inferType/castFromJson
+        const processed = new Set();
+        const queue = [mainClassName];
+
+        while (queue.length > 0) {
+          const name = queue.shift();
+          if (processed.has(name)) continue;
+          processed.add(name);
+
+          const obj = classes.get(name);
+          if (!obj || typeof obj !== 'object' || Array.isArray(obj)) continue;
+
+          const sizeBefore = classes.size;
+          output += buildClass(name, obj, isFactory, includeFromJson, includeToJson, classes) + '\n';
+
+          // Enqueue any newly discovered classes
+          for (const [k] of classes) {
+            if (!processed.has(k)) queue.push(k);
+          }
+        }
+
+        outputEditor.setValue(output.trimEnd());
+        document.getElementById('outputDot').classList.add('active');
+      } catch (e) {
+        outputEditor.setValue(`// Invalid JSON\n// ${e.message}`);
+        document.getElementById('outputDot').classList.remove('active');
+      }
+    }
+
+    function copyGeneratedCode() {
+      const val = outputEditor.getValue();
+      if (!val) return;
+      navigator.clipboard.writeText(val);
+      showToast("Copied to clipboard");
+    }
+  </script>
 </body>
+
 </html>
