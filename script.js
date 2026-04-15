@@ -1,5 +1,4 @@
 let jsonEditor, outputEditor;
-let currentStyle = 'manual';
 const HISTORY_KEY = "json_to_dart_history_v1";
 const HISTORY_LIMIT = 8;
 let selectedHistoryId = null;
@@ -75,17 +74,6 @@ require(["vs/editor/editor.main"], function () {
   hydrateHistory();
 });
 
-function setStyle(style) {
-  currentStyle = style;
-  document
-    .getElementById("manualBtn")
-    .classList.toggle("active", style === "manual");
-  document
-    .getElementById("factoryBtn")
-    .classList.toggle("active", style === "factory");
-  generateDart();
-}
-
 function togglePill(pill, checkId) {
   const check = document.getElementById(checkId);
   check.checked = !check.checked;
@@ -126,7 +114,6 @@ function getHistorySnapshot() {
     savedAt: new Date().toISOString(),
     className: document.getElementById("classNameInput").value.trim(),
     json: jsonEditor.getValue(),
-    style: currentStyle,
     fromJson: document.getElementById("fromJsonCheck").checked,
     toJson: document.getElementById("toJsonCheck").checked,
     usePrefix: document.getElementById("usePrefixCheck").checked,
@@ -150,7 +137,6 @@ function saveHistory() {
       !(
         entry.className === snapshot.className &&
         entry.json === snapshot.json &&
-        entry.style === snapshot.style &&
         entry.fromJson === snapshot.fromJson &&
         entry.toJson === snapshot.toJson &&
         entry.usePrefix === snapshot.usePrefix &&
@@ -245,7 +231,6 @@ function loadSelectedHistory() {
   document.getElementById("fromJsonPill").classList.toggle("checked", entry.fromJson !== false);
   document.getElementById("toJsonPill").classList.toggle("checked", entry.toJson !== false);
   document.getElementById("prefixPill").classList.toggle("checked", !!entry.usePrefix);
-  setStyle(entry.style === "factory" ? "factory" : "manual");
   jsonEditor.setValue(entry.json || "{}");
   generateDart();
   closeHistoryDialog();
@@ -264,6 +249,15 @@ function toPascalCase(str) {
     .replace(/[_-](.)/g, (_, c) => c.toUpperCase())
     .replace(/\s+(.)/g, (_, c) => c.toUpperCase())
     .replace(/^(.)/, (_, c) => c.toUpperCase());
+}
+
+function toCamelCase(str) {
+  const pascal = toPascalCase(
+    String(str)
+      .replace(/[^a-zA-Z0-9_ -]/g, " ")
+      .replace(/_/g, " ")
+  );
+  return pascal ? pascal.charAt(0).toLowerCase() + pascal.slice(1) : "value";
 }
 
 function toSnakeCase(str) {
@@ -285,6 +279,14 @@ function getPrefix() {
 
 function getClassName(name) {
   return getPrefix() + toPascalCase(name);
+}
+
+function getFieldName(name) {
+  let fieldName = toCamelCase(name);
+  if (/^\d/.test(fieldName)) {
+    fieldName = `field${fieldName}`;
+  }
+  return fieldName || "value";
 }
 
 function getBaseName(key, isArrayItem) {
@@ -397,52 +399,43 @@ function castToJson(key, value) {
 function buildClass(
   className,
   obj,
-  isFactory,
   includeFromJson,
   includeToJson,
   classes
 ) {
   const keys = Object.keys(obj);
+  const fieldMap = Object.fromEntries(keys.map((key) => [key, getFieldName(key)]));
   let out = `class ${className} {\n`;
 
   // Constructor
   out += `  ${className}({\n`;
   for (const key of keys) {
-    out += `    this.${key},\n`;
+    out += `    this.${fieldMap[key]},\n`;
   }
   out += `  });\n`;
 
   // fromJson
   if (includeFromJson) {
-    if (isFactory) {
-      out += `\n  factory ${className}.fromJson(Map<String, dynamic> json) => ${className}(\n`;
-      for (const key of keys) {
-        const cast = castFromJson(key, obj[key], classes);
-        out += `    ${key}: ${cast},\n`;
-      }
-      out += `  );\n`;
-    } else {
-      out += `\n  ${className}.fromJson(Map<String, dynamic> json) {\n`;
-      for (const key of keys) {
-        const cast = castFromJson(key, obj[key], classes);
-        out += `    ${key} = ${cast};\n`;
-      }
-      out += `  }\n`;
+    out += `\n  ${className}.fromJson(Map<String, dynamic> json) {\n`;
+    for (const key of keys) {
+      const cast = castFromJson(key, obj[key], classes);
+      out += `    ${fieldMap[key]} = ${cast};\n`;
     }
+    out += `  }\n`;
   }
 
   // Fields
   out += `\n`;
   for (const key of keys) {
     const type = inferType(key, obj[key], classes);
-    out += `  ${type}? ${key};\n`;
+    out += `  ${type}? ${fieldMap[key]};\n`;
   }
 
   // toJson
   if (includeToJson) {
     out += `\n  Map<String, dynamic> toJson() {\n    return {\n`;
     for (const key of keys) {
-      const val = castToJson(key, obj[key]);
+      const val = castToJson(fieldMap[key], obj[key]);
       out += `      '${key}': ${val},\n`;
     }
     out += `    };\n  }\n`;
@@ -458,7 +451,6 @@ function generateDart() {
     const mainClassName = toPascalCase(
       document.getElementById("classNameInput").value.trim() || "RootModel"
     );
-    const isFactory = currentStyle === "factory";
     const includeFromJson = document.getElementById("fromJsonCheck").checked;
     const includeToJson = document.getElementById("toJsonCheck").checked;
 
@@ -485,7 +477,6 @@ function generateDart() {
         buildClass(
           name,
           obj,
-          isFactory,
           includeFromJson,
           includeToJson,
           classes
