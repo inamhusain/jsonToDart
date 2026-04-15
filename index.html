@@ -36,7 +36,8 @@
     </div>
     <div class="topbar-badges">
       <span class="topbar-subtitle">Flutter</span>
-      <span id="versionChip" class="topbar-version">v1.0.0</span>
+      <span id="versionChip" class="topbar-version"></span>
+      <script>document.getElementById('versionChip').textContent = window.APP_VERSION || '';</script>
     </div>
   </div>
 

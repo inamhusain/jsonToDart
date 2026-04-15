@@ -733,6 +733,7 @@ body::after {
 }
 
 @keyframes drift {
+
   0%,
   100% {
     transform: translate3d(0, 0, 0);
@@ -822,6 +823,7 @@ body::after {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
