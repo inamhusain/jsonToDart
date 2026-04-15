@@ -147,6 +147,23 @@ body::after {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
+.topbar-badges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar-version {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--text-soft);
+  background: rgba(10, 18, 31, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  padding: 9px 12px;
+  border-radius: 999px;
+}
+
 .app-shell {
   padding: 0 24px 24px;
 }
@@ -748,6 +765,11 @@ body::after {
 
   .topbar-subtitle {
     align-self: flex-start;
+  }
+
+  .topbar-badges {
+    align-self: flex-start;
+    flex-wrap: wrap;
   }
 
   .toolbar {

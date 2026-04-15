@@ -3,6 +3,8 @@ const HISTORY_KEY = "json_to_dart_history_v1";
 const HISTORY_LIMIT = 8;
 let selectedHistoryId = null;
 
+const APP_VERSION = window.APP_VERSION || "v1.0.0";
+
 require.config({
   paths: { vs: "https://unpkg.com/monaco-editor@0.52.2/min/vs" },
 });
@@ -70,6 +72,11 @@ require(["vs/editor/editor.main"], function () {
       readOnly: true,
     }
   );
+
+  const versionChip = document.getElementById("versionChip");
+  if (versionChip) {
+    versionChip.textContent = APP_VERSION;
+  }
 
   hydrateHistory();
 });
