@@ -1,5 +1,8 @@
 let jsonEditor, outputEditor;
 let currentStyle = 'manual';
+const HISTORY_KEY = "json_to_dart_history_v1";
+const HISTORY_LIMIT = 8;
+let selectedHistoryId = null;
 
 require.config({
   paths: { vs: "https://unpkg.com/monaco-editor@0.52.2/min/vs" },
@@ -68,6 +71,8 @@ require(["vs/editor/editor.main"], function () {
       readOnly: true,
     }
   );
+
+  hydrateHistory();
 });
 
 function setStyle(style) {
@@ -96,8 +101,162 @@ function togglePill(pill, checkId) {
 
 function showToast(message) {
   const toast = document.getElementById("toast");
+  const textNode = toast.childNodes[toast.childNodes.length - 1];
+  if (textNode) {
+    textNode.textContent = ` ${message}`;
+  }
   toast.classList.add("show");
   setTimeout(() => toast.classList.remove("show"), 2000);
+}
+
+function openHistoryDialog() {
+  selectedHistoryId = null;
+  renderHistoryDialog();
+  document.getElementById("historyDialog").classList.add("active");
+}
+
+function closeHistoryDialog(event) {
+  if (event && event.target !== document.getElementById("historyDialog")) return;
+  document.getElementById("historyDialog").classList.remove("active");
+}
+
+function getHistorySnapshot() {
+  return {
+    id: Date.now(),
+    savedAt: new Date().toISOString(),
+    className: document.getElementById("classNameInput").value.trim(),
+    json: jsonEditor.getValue(),
+    style: currentStyle,
+    fromJson: document.getElementById("fromJsonCheck").checked,
+    toJson: document.getElementById("toJsonCheck").checked,
+    usePrefix: document.getElementById("usePrefixCheck").checked,
+    prefix: document.getElementById("prefixInput").value.trim(),
+  };
+}
+
+function readHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+  } catch (_) {
+    return [];
+  }
+}
+
+function saveHistory() {
+  const snapshot = getHistorySnapshot();
+  const entries = readHistory();
+  const deduped = entries.filter(
+    (entry) =>
+      !(
+        entry.className === snapshot.className &&
+        entry.json === snapshot.json &&
+        entry.style === snapshot.style &&
+        entry.fromJson === snapshot.fromJson &&
+        entry.toJson === snapshot.toJson &&
+        entry.usePrefix === snapshot.usePrefix &&
+        entry.prefix === snapshot.prefix
+      )
+  );
+
+  localStorage.setItem(
+    HISTORY_KEY,
+    JSON.stringify([snapshot, ...deduped].slice(0, HISTORY_LIMIT))
+  );
+  hydrateHistory();
+  if (document.getElementById("historyDialog").classList.contains("active")) {
+    renderHistoryDialog();
+  }
+}
+
+function hydrateHistory() {
+  renderHistoryDialog();
+}
+
+function getHistoryPreviewText(entry) {
+  if (!entry) return "No history selected.";
+  try {
+    const parsed = JSON.parse(entry.json || "{}");
+    return JSON.stringify(parsed, null, 2).slice(0, 700);
+  } catch (_) {
+    return (entry.json || "").slice(0, 700);
+  }
+}
+
+function selectHistoryEntry(id) {
+  selectedHistoryId = String(id);
+  renderHistoryDialog();
+}
+
+function renderHistoryDialog() {
+  const listEl = document.getElementById("historyList");
+  const previewEl = document.getElementById("historyPreviewContent");
+  const metaEl = document.getElementById("historyPreviewMeta");
+  const loadBtn = document.getElementById("historyLoadBtn");
+
+  if (!listEl || !previewEl || !metaEl || !loadBtn) return;
+
+  const entries = readHistory();
+  listEl.innerHTML = "";
+
+  if (!entries.length) {
+    listEl.innerHTML = `<div class="history-empty">No local history yet. Generate something once and it will appear here.</div>`;
+    previewEl.textContent = "No history selected.";
+    metaEl.textContent = "Select a history item";
+    loadBtn.disabled = true;
+    return;
+  }
+
+  if (!selectedHistoryId || !entries.some((entry) => String(entry.id) === selectedHistoryId)) {
+    selectedHistoryId = String(entries[0].id);
+  }
+
+  entries.forEach((entry) => {
+    const button = document.createElement("button");
+    button.className = `history-tile${String(entry.id) === selectedHistoryId ? " active" : ""}`;
+    button.type = "button";
+    button.onclick = () => selectHistoryEntry(entry.id);
+    button.innerHTML = `
+      <span class="history-tile-title">${entry.className || "RootModel"}</span>
+      <span class="history-tile-meta">${new Date(entry.savedAt).toLocaleString()}</span>
+      <span class="history-tile-snippet">${(entry.json || "").replace(/\s+/g, " ").slice(0, 110)}</span>
+    `;
+    listEl.appendChild(button);
+  });
+
+  const selectedEntry = entries.find((entry) => String(entry.id) === selectedHistoryId);
+  previewEl.textContent = getHistoryPreviewText(selectedEntry);
+  metaEl.textContent = selectedEntry
+    ? `${selectedEntry.className || "RootModel"} • ${new Date(selectedEntry.savedAt).toLocaleString()}`
+    : "Select a history item";
+  loadBtn.disabled = !selectedEntry;
+}
+
+function loadSelectedHistory() {
+  if (!selectedHistoryId) return;
+  const entry = readHistory().find((item) => String(item.id) === selectedHistoryId);
+  if (!entry) return;
+
+  document.getElementById("classNameInput").value = entry.className || "";
+  document.getElementById("fromJsonCheck").checked = entry.fromJson !== false;
+  document.getElementById("toJsonCheck").checked = entry.toJson !== false;
+  document.getElementById("usePrefixCheck").checked = !!entry.usePrefix;
+  document.getElementById("prefixInput").value = entry.prefix || "";
+  document.getElementById("prefixWrap").style.display = entry.usePrefix ? "block" : "none";
+  document.getElementById("fromJsonPill").classList.toggle("checked", entry.fromJson !== false);
+  document.getElementById("toJsonPill").classList.toggle("checked", entry.toJson !== false);
+  document.getElementById("prefixPill").classList.toggle("checked", !!entry.usePrefix);
+  setStyle(entry.style === "factory" ? "factory" : "manual");
+  jsonEditor.setValue(entry.json || "{}");
+  generateDart();
+  closeHistoryDialog();
+  showToast("History loaded");
+}
+
+function clearHistory() {
+  localStorage.removeItem(HISTORY_KEY);
+  selectedHistoryId = null;
+  hydrateHistory();
+  showToast("History cleared");
 }
 
 function toPascalCase(str) {
@@ -340,6 +499,7 @@ function generateDart() {
 
     outputEditor.setValue(output.trimEnd());
     document.getElementById("outputDot").classList.add("active");
+    saveHistory();
   } catch (e) {
     outputEditor.setValue(`// Invalid JSON\n// ${e.message}`);
     document.getElementById("outputDot").classList.remove("active");

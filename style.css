@@ -319,7 +319,8 @@ body::after {
 }
 
 .btn-generate,
-.btn-copy {
+.btn-copy,
+.btn-icon {
   min-height: 46px;
   padding: 10px 18px;
   border-radius: 14px;
@@ -356,12 +357,191 @@ body::after {
   color: var(--text-soft);
 }
 
-.btn-copy:hover {
+.btn-copy:hover,
+.btn-icon:hover {
   transform: translateY(-2px);
   background: rgba(16, 28, 48, 0.92);
   color: var(--text);
   border-color: rgba(89, 178, 255, 0.18);
   box-shadow: 0 14px 28px rgba(2, 10, 24, 0.28);
+}
+
+.btn-icon {
+  min-width: 46px;
+  padding: 0;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(10, 18, 31, 0.82);
+  color: var(--text-soft);
+}
+
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(4, 10, 18, 0.62);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+  z-index: 40;
+}
+
+.dialog-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dialog-card {
+  width: min(960px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(14, 24, 41, 0.98), rgba(8, 16, 29, 0.98));
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.dialog-note {
+  color: var(--text-soft);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.dialog-close {
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(10, 18, 31, 0.82);
+  color: var(--text-soft);
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+
+.dialog-close:hover {
+  color: var(--text);
+  background: rgba(16, 28, 48, 0.92);
+}
+
+.dialog-body {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.95fr) minmax(0, 1.05fr);
+  gap: 18px;
+  min-height: 0;
+  overflow: auto;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 220px;
+}
+
+.history-tile {
+  width: 100%;
+  text-align: left;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(10, 18, 31, 0.7);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+
+.history-tile:hover,
+.history-tile.active {
+  transform: translateY(-1px);
+  border-color: rgba(89, 178, 255, 0.22);
+  background: rgba(16, 28, 48, 0.94);
+  box-shadow: 0 14px 28px rgba(2, 10, 24, 0.28);
+}
+
+.history-tile-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.history-tile-meta {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+}
+
+.history-tile-snippet {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.history-empty {
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px dashed rgba(148, 163, 184, 0.14);
+  color: var(--text-soft);
+  text-align: center;
+}
+
+.history-preview {
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(8, 16, 29, 0.72);
+  overflow: hidden;
+  min-height: 220px;
+}
+
+.history-preview-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.history-preview-meta {
+  color: var(--text-soft);
+  font-size: 0.78rem;
+}
+
+.history-preview-code {
+  margin: 0;
+  padding: 16px;
+  color: #cfe5ff;
+  font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+  font-size: 0.79rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 360px;
+  overflow: auto;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px 20px;
+  border-top: 1px solid rgba(148, 163, 184, 0.08);
 }
 
 .editors-wrap {
@@ -592,6 +772,15 @@ body::after {
   .editors-wrap {
     grid-template-columns: 1fr;
     min-height: auto;
+  }
+
+  .history-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dialog-body {
+    grid-template-columns: 1fr;
   }
 
   #jsonEditor,
