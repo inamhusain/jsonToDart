@@ -23,10 +23,15 @@
     })();
   </script>
 
+  <!--
+    Three families, one job each: Alumni Sans is display-only (weight is its
+    single axis, 100 → 500), Albert Sans carries the UI, JetBrains Mono owns
+    every micro-label and all code.
+  -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@300;400;500;600;700&family=Alumni+Sans:wght@100;300;400;500&family=JetBrains+Mono:wght@400;500;700&display=swap"
     rel="stylesheet" />
 
   <!-- Cascade order matters: tokens first, responsive overrides last -->
@@ -104,22 +109,25 @@
     </symbol>
   </svg>
 
-  <div class="topbar">
-    <div class="brand-lockup">
-      <div class="brand-mark">
+  <!--
+    Fixed glass rail. It is transparent over the hero and resolves into tinted
+    glass on scroll — every property interpolates off the single --hp custom
+    property, written by initHeaderProgress() in src/ui/motion.js.
+  -->
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="JSON to Dart — back to top">
+      <span class="brand-mark">
         <svg class="flutter-logo" aria-hidden="true">
           <use href="#icon-flutter" />
         </svg>
-      </div>
-      <div class="brand-copy">
-        <span class="topbar-title">JSON → Dart Model Generator</span>
-        <span class="topbar-caption">Shape raw payloads into clean Flutter models with a faster, calmer
-          workspace.</span>
-      </div>
-    </div>
-    <div class="topbar-badges">
-      <span class="topbar-subtitle">Flutter</span>
-      <span id="versionChip" class="topbar-version"></span>
+      </span>
+      <span class="wordmark">json<em>to</em>dart</span>
+    </a>
+
+    <div class="header-actions">
+      <a class="header-link" href="https://github.com/inamhusain/jsonToDart" target="_blank"
+        rel="noopener noreferrer">GitHub</a>
+      <span id="versionChip" class="chip-version"></span>
       <button id="themeToggle" class="theme-toggle" type="button" title="Switch between light and dark"
         aria-label="Switch colour theme">
         <svg class="icon-sun" aria-hidden="true">
@@ -130,9 +138,22 @@
         </svg>
       </button>
     </div>
-  </div>
+  </header>
 
-  <div class="app-shell">
+  <section class="hero" id="top">
+    <p class="eyebrow">Model Generator / Flutter</p>
+    <h1 class="display">JSON in.<br /><em>Dart out.</em></h1>
+    <p class="lede">Paste a payload and get idiomatic Flutter models back — nested classes discovered for you,
+      null-safe fields, and <code>fromJson</code> / <code>toJson</code> written both ways.</p>
+    <div class="hero-rail">
+      <span class="rail-chip">Nested classes</span>
+      <span class="rail-chip">Null-safe</span>
+      <span class="rail-chip">fromJson / toJson</span>
+      <span class="rail-chip">Runs in your browser</span>
+    </div>
+  </section>
+
+  <main class="app-shell" id="workspace">
     <div class="toolbar">
       <div class="toolbar-group toolbar-group-grow">
         <label class="tb-label" for="classNameInput">Class</label>
@@ -268,7 +289,7 @@
           id="statLines">0</span></span>
       <span class="status-right" id="statusMessage">Paste JSON to begin</span>
     </div>
-  </div>
+  </main>
 
   <div id="toast" class="toast" role="status" aria-live="polite">
     <svg aria-hidden="true">
@@ -414,14 +435,14 @@
     </div>
   </div>
 
-  <div class="footer">
-    <span><strong>INAMHUSAIN</strong> &bull; Flutter Developer</span>
-    <span style="opacity: 0.5;">|</span>
+  <footer class="footer">
+    <span><strong>Inamhusain</strong> &bull; Flutter Developer</span>
+    <span class="footer-sep">/</span>
     <a href="https://github.com/inamhusain" target="_blank" rel="noopener noreferrer">GitHub</a>
-    <span style="opacity: 0.5;">|</span>
+    <span class="footer-sep">/</span>
     <a href="https://www.linkedin.com/in/inamhusain-masi-096864153/" target="_blank"
       rel="noopener noreferrer">LinkedIn</a>
-  </div>
+  </footer>
 
 
 </body>

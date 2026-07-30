@@ -5,7 +5,7 @@ import * as historyDialog from "./history/dialog.js";
 import * as theme from "./theme.js";
 import { closeAllDialogs, initDialogs } from "./ui/dialog.js";
 import { initInfoDialog } from "./ui/info-dialog.js";
-import { initPointerParallax } from "./ui/motion.js";
+import { initHeaderProgress, initPointerParallax } from "./ui/motion.js";
 import { setStatus } from "./ui/status.js";
 import * as toolbar from "./ui/toolbar.js";
 
@@ -56,6 +56,7 @@ async function start() {
   initDialogs();
   initInfoDialog();
   historyDialog.initHistoryDialog({ onLoad: app.loadHistoryEntry });
+  initHeaderProgress();
   initPointerParallax();
 
   try {

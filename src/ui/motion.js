@@ -23,14 +23,50 @@ export function flashOutputPane() {
 }
 
 /**
- * Drift the dot grid a few pixels with the pointer. Writes CSS custom
- * properties instead of styles so the easing stays in CSS; updates are
+ * Drive the header rail's glass.
+ *
+ * Writes --hp ("header progress", 0 → 1) as the hero scrolls out of view.
+ * styles/layout.css interpolates the rail's tint, hairline and blur radius off
+ * that single value, so all three stay in lockstep with no per-property JS.
+ *
+ * Deliberately NOT gated on reduced motion: this is a state change that keeps
+ * the header legible over content, not decoration.
+ */
+export function initHeaderProgress() {
+  const hero = $(".hero");
+  if (!hero) return;
+
+  const root = document.documentElement;
+  let queued = false;
+
+  const apply = () => {
+    // Fully glass by the time the hero's last quarter has passed the rail
+    const span = Math.max(hero.offsetHeight * 0.75, 1);
+    const hp = Math.min(Math.max(window.scrollY / span, 0), 1);
+    root.style.setProperty("--hp", hp.toFixed(3));
+    queued = false;
+  };
+
+  const schedule = () => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(apply);
+  };
+
+  window.addEventListener("scroll", schedule, { passive: true });
+  window.addEventListener("resize", schedule, { passive: true });
+  apply();
+}
+
+/**
+ * Drift the hero's ambient light a few pixels with the pointer. Writes CSS
+ * custom properties instead of styles so the easing stays in CSS; updates are
  * coalesced into one animation frame.
  */
 export function initPointerParallax() {
   if (reduced) return;
 
-  const DEPTH = 14;
+  const DEPTH = 20;
   let queued = false;
   let x = 0;
   let y = 0;

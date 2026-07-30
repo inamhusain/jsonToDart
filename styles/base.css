@@ -1,6 +1,6 @@
 /* ==========================================================================
-   base.css — Reset, document shell, dot-grid backdrop, and the shared
-   mono micro-label primitive used across every component.
+   base.css — Reset, document shell, grain backdrop, and the shared type
+   primitives (display, headline, eyebrow, mono micro-label).
    ========================================================================== */
 
 /* ── RESET ──────────────────────────────────────────────────────────────── */
@@ -14,6 +14,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* The fixed header must not cover a section you jumped to */
+  scroll-padding-top: var(--header-h);
 }
 
 body {
@@ -29,20 +31,21 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Subtle dot grid, faded out toward the bottom so it never fights the panes */
-body::before {
+/* Film grain over the whole page. Soft-light on lacquer, multiply on washi —
+   the same texture reads as sheen on dark and as paper tooth on light. */
+body::after {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: 9;
   pointer-events: none;
-  background-image: radial-gradient(var(--dot) 1px, transparent 1px);
-  background-size: 24px 24px;
-  -webkit-mask-image: radial-gradient(ellipse 130% 90% at 50% 0%, #000 15%, transparent 78%);
-  mask-image: radial-gradient(ellipse 130% 90% at 50% 0%, #000 15%, transparent 78%);
+  opacity: var(--grain-opacity);
+  mix-blend-mode: var(--grain-blend);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-.topbar,
+.site-header,
+.hero,
 .app-shell,
 .footer,
 .toast {
@@ -50,23 +53,72 @@ body::before {
   z-index: 1;
 }
 
-/* ── SHARED PRIMITIVES ──────────────────────────────────────────────────── */
+/* ── TYPE PRIMITIVES ────────────────────────────────────────────────────── */
+
+/* Display and headline share one face. Weight is the only axis between them. */
+.display {
+  font-family: var(--font-display);
+  font-weight: var(--type-display-weight);
+  font-size: var(--type-display);
+  line-height: var(--type-display-line);
+  letter-spacing: var(--type-display-track);
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.headline {
+  font-family: var(--font-display);
+  font-weight: var(--type-headline-weight);
+  font-size: var(--type-headline);
+  line-height: var(--type-headline-line);
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.lede {
+  max-width: var(--measure);
+  font-size: var(--type-lede);
+  line-height: var(--type-lede-line);
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.lede code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  color: var(--accent-text);
+  background: var(--accent-wash);
+  border: var(--hair) solid var(--accent-ring);
+  padding: 1px 5px;
+  border-radius: var(--radius);
+  white-space: nowrap;
+}
+
+/* Uppercase mono eyebrow — sits above a display line, gold by default */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--type-eyebrow);
+  font-weight: 500;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--accent-text);
+}
 
 /* Uppercase mono micro-label — the workhorse of this theme */
 .tb-label,
 .pane-title,
-.topbar-subtitle,
 .lang-badge,
 .status-key {
   font-family: var(--font-mono);
   text-transform: uppercase;
-  letter-spacing: 0.18em;
+  letter-spacing: var(--track-label);
   font-weight: 500;
 }
 
 :focus-visible {
   outline: 2px solid var(--accent-line);
   outline-offset: 2px;
+  border-radius: var(--radius);
 }
 
 /* ── ICONS ──────────────────────────────────────────────────────────────── */

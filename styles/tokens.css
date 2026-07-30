@@ -1,112 +1,217 @@
 /* ==========================================================================
-   tokens.css — Design tokens: type, spacing, and the light/dark palettes.
+   tokens.css — Design tokens: families, type scale, geometry, and the
+   light/dark palettes.
    Monaco's twin palettes live in src/editor/themes.js — keep them in step.
    ========================================================================== */
 
 /* ==========================================================================
    JSON → Dart Model Generator
-   Precision dev-tool theme — flat, hairline-driven, light + dark.
+   Lacquer & gold-leaf theme — warm near-black, kinpaku gold, patina teal.
+
+   Three families, one job each:
+     --font-display  Alumni Sans   headlines ONLY. Weight is the only axis.
+     --font-sans     Albert Sans   UI and body copy.
+     --font-mono     JetBrains     micro-labels, chips, and code.
 
    Accent discipline:
-     --accent        yellow, FILL ONLY (dark ink sits on top)
+     --accent        gold, FILL ONLY (dark ink sits on top)
      --accent-line   2px rules / borders / graphics
-     --accent-text   accent-coloured text (darkened in light mode for AA)
+     --accent-text   accent-coloured text (deepened in light mode for AA)
+
+   Gold means input and primary action. Patina means output and healthy
+   state. Nothing else is allowed to be coloured.
    ========================================================================== */
 
 :root {
   color-scheme: dark light;
 
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* ── FAMILIES ───────────────────────────────────────────────────────── */
+  --font-display: "Alumni Sans", "Albert Sans", Arial, sans-serif;
+  --font-sans: "Albert Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 
-  --radius: 0px;
+  /* ── TYPE SCALE ─────────────────────────────────────────────────────── */
+  /* Display and headline are the SAME face. Only weight and size change. */
+  --type-display: clamp(3.4rem, 6.5vw, 5.6rem);
+  --type-display-weight: 100;
+  --type-display-line: 1.02;
+  --type-display-track: -0.01em;
+
+  --type-headline: clamp(1.9rem, 3vw, 2.6rem);
+  --type-headline-weight: 300;
+  --type-headline-line: 1.06;
+
+  --type-lede: 1rem;
+  --type-lede-line: 1.7;
+
+  /* Mono micro-type — the workhorse of this theme */
+  --type-eyebrow: 0.7rem;
+  --type-label: 0.66rem;
+  --track-eyebrow: 0.28em;
+  --track-label: 0.22em;
+  --track-chip: 0.14em;
+  --track-wordmark: 0.15em;
+
+  /* ── GEOMETRY ───────────────────────────────────────────────────────── */
+  --radius: 2px;
+  --radius-window: 3px;
+  --radius-pill: 100px;
   --hair: 1px;
   --rule: 2px;
 
-  --dur: 140ms;
-  --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+  /* ── MOTION ─────────────────────────────────────────────────────────── */
+  --dur: 180ms;
+  --dur-slow: 420ms;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 
-  --pad-x: 20px;
+  /* ── SPACE ──────────────────────────────────────────────────────────── */
+  --pad-x: clamp(16px, 4vw, 56px);
   --gap: 12px;
+  --hero-y: clamp(44px, 8.5vh, 104px);
+  --header-h: 56px;
+  --measure: 62ch;
 }
 
-/* ── DARK ───────────────────────────────────────────────────────────────── */
+/* ── DARK — lacquer ─────────────────────────────────────────────────────── */
+/*
+   Every value here is inside sRGB, so the hex twins in src/editor/themes.js
+   match exactly rather than relying on the browser's gamut mapping.
+   The reference's own lightnesses (7%–19%) resolve to #010101–#0b0b0a — four
+   surfaces that are indistinguishable on a real screen. Lifted just enough
+   that the steps read, keeping the warm lacquer hue.
+*/
 :root,
 :root[data-theme="dark"] {
-  --canvas: #0b0b0c;
-  --panel: #101012;
-  --panel-2: #16161a;
-  --panel-3: #1c1c21;
+  --canvas: oklch(14.5% 0.008 95);
+  /* #0b0a07 */
+  --canvas-deep: oklch(12% 0.006 95);
+  /* #060604 */
+  --panel: oklch(17.5% 0.008 95);
+  /* #12100d */
+  --panel-2: oklch(21% 0.01 95);
+  /* #1a1813 */
+  --panel-3: oklch(24% 0.01 95);
+  /* #211f1a */
 
-  --line: #26262b;
-  --line-strong: #35353d;
+  --line: oklch(78% 0 0 / 0.16);
+  --line-strong: oklch(78% 0 0 / 0.3);
 
-  --ink: #ededef;
-  --ink-2: #a1a1aa;
-  --ink-3: #6e6e78;
+  --ink: oklch(91% 0 0);
+  /* #e1e1e1 champagne */
+  --ink-2: oklch(72% 0 0);
+  /* #a4a4a4 */
+  --ink-3: oklch(58% 0 0);
+  /* #7a7a7a — 4.6:1 on canvas */
 
-  --accent: #f5c518;
-  --accent-ink: #0b0b0c;
-  --accent-line: #f5c518;
-  --accent-text: #f5c518;
-  --accent-wash: rgba(245, 197, 24, 0.1);
-  --accent-ring: rgba(245, 197, 24, 0.22);
+  --accent: oklch(82% 0.16 80);
+  /* #fab72a kinpaku */
+  --accent-vivid: oklch(88% 0.123 84);
+  /* #fed173 */
+  --accent-ink: oklch(14% 0.018 95);
+  /* #0b0903 */
+  --accent-line: oklch(82% 0.16 80);
+  --accent-text: oklch(82% 0.16 80);
+  --accent-wash: oklch(82% 0.16 80 / 0.1);
+  --accent-ring: oklch(82% 0.16 80 / 0.24);
 
-  --orange: #e07000;
-  --orange-line: #e07000;
+  --patina: oklch(70% 0.12 188);
+  --patina-line: oklch(70% 0.12 188);
+  --patina-text: oklch(70% 0.12 188);
+  --patina-wash: oklch(70% 0.12 188 / 0.1);
+  --patina-ring: oklch(70% 0.12 188 / 0.24);
 
-  --ok: #4ade80;
-  --ok-wash: rgba(74, 222, 128, 0.1);
-  --err: #f87171;
+  --ok: oklch(70% 0.12 188);
+  --ok-wash: oklch(70% 0.12 188 / 0.1);
+  --err: oklch(62% 0.15 35);
+  --err-wash: oklch(62% 0.15 35 / 0.12);
 
-  --dot: rgba(255, 255, 255, 0.055);
-  --code-bg: #0e0e10;
-  --on-fill-shade: rgba(0, 0, 0, 0.22);
+  --code-bg: oklch(12.5% 0.006 95);
+  /* #070605 — panes sit deeper than the canvas, like an inset window */
+  --on-fill-shade: oklch(0% 0 0 / 0.22);
+
+  /* Polished-lacquer depth: a 1px specular top edge over a deep soft drop */
+  --sheen: inset 0 1px 0 oklch(99% 0 0 / 0.07);
+  --lift: 0 20px 48px -14px oklch(0% 0 0 / 0.55);
+  --lift-sm: 0 12px 32px -14px oklch(0% 0 0 / 0.45);
+
+  --grain-opacity: 0.055;
+  --grain-blend: soft-light;
+  --glass-tint: oklch(8% 0.006 95);
 
   /* Match the Monaco dark palette so samples read like the output pane */
-  --tk-kw: #c4a0ff;
-  --tk-cl: #7dd3fc;
-  --tk-st: #86efac;
-  --tk-num: #f5c518;
-  --tk-cm: #5a5a64;
+  --tk-kw: oklch(72% 0.14 300);
+  /* #b28fef */
+  --tk-cl: oklch(78% 0.1 188);
+  /* #61ccc3 */
+  --tk-st: oklch(86% 0.07 84);
+  /* #e7ce9d */
+  --tk-num: oklch(82% 0.16 80);
+  /* #fab72a */
+  --tk-cm: oklch(46% 0.01 95);
+  /* #5a5852 */
 }
 
-/* ── LIGHT ──────────────────────────────────────────────────────────────── */
+/* ── LIGHT — sumi ink on washi ──────────────────────────────────────────── */
 :root[data-theme="light"] {
-  --canvas: #fbfbf9;
-  --panel: #ffffff;
-  --panel-2: #f4f4f1;
-  --panel-3: #ecece8;
+  --canvas: oklch(97% 0.008 95);
+  --canvas-deep: oklch(99% 0.004 95);
+  --panel: oklch(99.5% 0.003 95);
+  --panel-2: oklch(95% 0.008 95);
+  --panel-3: oklch(92% 0.01 95);
 
-  --line: #e3e3de;
-  --line-strong: #cfcfc8;
+  --line: oklch(30% 0.02 95 / 0.14);
+  --line-strong: oklch(30% 0.02 95 / 0.26);
 
-  --ink: #17171a;
-  --ink-2: #55555c;
-  --ink-3: #83838c;
+  --ink: oklch(22% 0.015 95);
+  /* #1d1b13 sumi */
+  --ink-2: oklch(42% 0.012 95);
+  /* #4f4d46 */
+  --ink-3: oklch(52% 0.01 95);
+  /* 5.1:1 on washi — micro-labels have to clear AA too */
 
-  --accent: #f5c518;
-  --accent-ink: #17171a;
-  --accent-line: #c77f00;
-  --accent-text: #a16207;
-  --accent-wash: #fff8dc;
-  --accent-ring: rgba(199, 127, 0, 0.24);
+  --accent: oklch(82% 0.16 80);
+  /* same gold fill, dark ink on top */
+  --accent-vivid: oklch(76% 0.15 78);
+  --accent-ink: oklch(14% 0.018 95);
+  --accent-line: oklch(62% 0.125 78);
+  /* #af7b11 */
+  --accent-text: oklch(52% 0.11 74);
+  /* #8e5e01 — 4.9:1 on washi */
+  --accent-wash: oklch(82% 0.16 80 / 0.16);
+  --accent-ring: oklch(62% 0.125 78 / 0.26);
 
-  --orange: #9a3412;
-  --orange-line: #b45309;
+  --patina: oklch(50% 0.084 188);
+  /* #0d726c */
+  --patina-line: oklch(50% 0.084 188);
+  --patina-text: oklch(50% 0.084 188);
+  --patina-wash: oklch(70% 0.12 188 / 0.14);
+  --patina-ring: oklch(50% 0.084 188 / 0.26);
 
-  --ok: #15803d;
-  --ok-wash: #eaf7ee;
-  --err: #dc2626;
+  --ok: oklch(50% 0.084 188);
+  --ok-wash: oklch(70% 0.12 188 / 0.14);
+  --err: oklch(50% 0.16 32);
+  --err-wash: oklch(62% 0.15 35 / 0.12);
 
-  --dot: rgba(0, 0, 0, 0.055);
-  --code-bg: #ffffff;
-  --on-fill-shade: rgba(0, 0, 0, 0.14);
+  --code-bg: oklch(99.5% 0.003 95);
+  --on-fill-shade: oklch(0% 0 0 / 0.14);
+
+  --sheen: inset 0 1px 0 oklch(100% 0 0 / 0.9);
+  --lift: 0 20px 48px -14px oklch(25% 0.02 95 / 0.14);
+  --lift-sm: 0 12px 32px -14px oklch(25% 0.02 95 / 0.1);
+
+  --grain-opacity: 0.03;
+  --grain-blend: multiply;
+  --glass-tint: oklch(97% 0.008 95);
 
   /* Match the Monaco light palette */
-  --tk-kw: #7c3aed;
-  --tk-cl: #0369a1;
-  --tk-st: #15803d;
-  --tk-num: #b45309;
-  --tk-cm: #83838c;
+  --tk-kw: oklch(48% 0.2 295);
+  /* #6a37bf */
+  --tk-cl: oklch(50% 0.084 188);
+  /* #0d726c */
+  --tk-st: oklch(48% 0.11 145);
+  /* #2f6d34 */
+  --tk-num: oklch(52% 0.11 74);
+  /* #8e5e01 */
+  --tk-cm: oklch(60% 0.01 95);
+  /* #82807a */
 }

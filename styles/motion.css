@@ -1,5 +1,5 @@
 /* ==========================================================================
-   motion.css — Keyframes, first-load sequence, ambient drift, interaction
+   motion.css — Keyframes, first-load sequence, ambient light, interaction
    feedback, and the reduced-motion escape hatch.
    ========================================================================== */
 
@@ -11,20 +11,23 @@
    kill animation outright without leaving anything permanently invisible.
    ========================================================================== */
 
-@keyframes paneIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
 @keyframes rise {
   from {
     opacity: 0;
     transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Display type rises further and slower — it is the biggest thing on screen */
+@keyframes riseDisplay {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
   }
 
   to {
@@ -77,23 +80,45 @@
   }
 }
 
-@keyframes dotDrift {
-  from {
-    background-position: 0 0;
-  }
-
-  to {
-    background-position: 24px 24px;
-  }
+/* ── FIRST-LOAD SEQUENCE ────────────────────────────────────────────────── */
+.site-header {
+  animation: fadeIn var(--dur-slow) var(--ease) both;
 }
 
-/* ── FIRST-LOAD SEQUENCE ────────────────────────────────────────────────── */
-.topbar {
+.hero .eyebrow {
+  animation: rise 460ms var(--ease) 60ms both;
+}
+
+.hero .display {
+  animation: riseDisplay 700ms var(--ease) 120ms both;
+}
+
+.hero .lede {
+  animation: rise 520ms var(--ease) 240ms both;
+}
+
+.hero-rail>* {
   animation: rise 420ms var(--ease) both;
 }
 
+.hero-rail>*:nth-child(1) {
+  animation-delay: 320ms;
+}
+
+.hero-rail>*:nth-child(2) {
+  animation-delay: 370ms;
+}
+
+.hero-rail>*:nth-child(3) {
+  animation-delay: 420ms;
+}
+
+.hero-rail>*:nth-child(4) {
+  animation-delay: 470ms;
+}
+
 .toolbar {
-  animation: rise 420ms var(--ease) 70ms both;
+  animation: rise var(--dur-slow) var(--ease) 380ms both;
 }
 
 .editor-pane {
@@ -101,19 +126,19 @@
 }
 
 .editor-pane.pane-input {
-  animation-delay: 140ms;
+  animation-delay: 440ms;
 }
 
 .editor-pane.pane-output {
-  animation-delay: 210ms;
+  animation-delay: 510ms;
 }
 
 .statusbar {
-  animation: rise 420ms var(--ease) 280ms both;
+  animation: rise var(--dur-slow) var(--ease) 580ms both;
 }
 
 .footer {
-  animation: fadeIn 520ms var(--ease) 360ms both;
+  animation: fadeIn 520ms var(--ease) 660ms both;
 }
 
 /* Stagger the toolbar's own controls just behind the bar itself */
@@ -123,31 +148,31 @@
 }
 
 .toolbar-group>*:nth-child(1) {
-  animation-delay: 150ms;
+  animation-delay: 440ms;
 }
 
 .toolbar-group>*:nth-child(2) {
-  animation-delay: 190ms;
+  animation-delay: 480ms;
 }
 
 .toolbar-group>*:nth-child(3) {
-  animation-delay: 230ms;
+  animation-delay: 520ms;
 }
 
 .toolbar-actions>*:nth-child(1) {
-  animation-delay: 230ms;
+  animation-delay: 520ms;
 }
 
 .toolbar-actions>*:nth-child(2) {
-  animation-delay: 270ms;
+  animation-delay: 560ms;
 }
 
 .toolbar-actions>*:nth-child(3) {
-  animation-delay: 310ms;
+  animation-delay: 600ms;
 }
 
 .toolbar-actions>*:nth-child(4) {
-  animation-delay: 350ms;
+  animation-delay: 640ms;
 }
 
 /* The pane's top accent rule, drawn as an overlay so the real border stays put */
@@ -164,23 +189,38 @@
   height: var(--rule);
   background: var(--accent-line);
   transform-origin: left center;
-  animation: drawRule 620ms var(--ease) 260ms both;
+  animation: drawRule 620ms var(--ease) 560ms both;
   pointer-events: none;
 }
 
 .editor-pane.pane-output::before {
-  background: var(--orange-line);
-  animation-delay: 340ms;
+  background: var(--patina-line);
+  animation-delay: 640ms;
 }
 
 /* ── AMBIENT ────────────────────────────────────────────────────────────── */
 
-/* Dot grid drifts one full cell over a long cycle, and shifts with the pointer
-   (--px / --py are written by script.js on mousemove) */
-body::before {
-  animation: dotDrift 24s linear infinite;
+/*
+   A single soft gold light behind the hero, drifting with the pointer.
+   --px / --py are written by initPointerParallax() in src/ui/motion.js.
+*/
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: -20% -10% auto -10%;
+  height: 150%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 55% at 22% 28%, var(--accent-wash), transparent 68%),
+    radial-gradient(45% 45% at 78% 12%, var(--patina-wash), transparent 70%);
   transform: translate3d(var(--px, 0px), var(--py, 0px), 0);
-  transition: transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform 700ms var(--ease);
+}
+
+/* Washi reflects far more of it than lacquer does — same light, less of it */
+:root[data-theme="light"] .hero::before {
+  opacity: 0.5;
 }
 
 /* ── INTERACTION ────────────────────────────────────────────────────────── */
@@ -190,7 +230,7 @@ body::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, var(--accent-wash), transparent);
+  background: linear-gradient(90deg, transparent, var(--patina-wash), transparent);
   animation: sweep 700ms var(--ease) both;
   pointer-events: none;
 }
@@ -270,7 +310,7 @@ body::before {
   }
 
   /* Entrance keyframes are gone, so make sure nothing is left mid-transform */
-  body::before {
+  .hero::before {
     transform: none !important;
   }
 

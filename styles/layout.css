@@ -1,88 +1,104 @@
 /* ==========================================================================
-   layout.css — Structural regions: topbar, app shell, editor panes,
-   status strip, footer.
+   layout.css — Structural regions: glass header rail, hero band, workspace,
+   editor windows, status strip, footer.
    ========================================================================== */
 
-/* ── TOPBAR ─────────────────────────────────────────────────────────────── */
-.topbar {
+/* ── GLASS HEADER RAIL ──────────────────────────────────────────────────── */
+/*
+   Everything interpolates off one variable. --hp ("header progress") is 0 at
+   the top of the page and 1 once you have scrolled past the hero; it is
+   written by initHeaderProgress() in src/ui/motion.js. At rest the rail is
+   invisible over the hero; on scroll it resolves into tinted glass.
+*/
+.site-header {
+  --hp: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px var(--pad-x);
-  background: var(--panel);
-  border-bottom: var(--hair) solid var(--line);
+  height: var(--header-h);
+  padding: 0 var(--pad-x);
+  background: color-mix(in srgb, var(--glass-tint) calc(var(--hp) * 88%), transparent);
+  border-bottom: var(--hair) solid color-mix(in srgb, var(--accent) calc(var(--hp) * 22%), transparent);
+  -webkit-backdrop-filter: saturate(calc(1 + 0.35 * var(--hp))) blur(calc(18px * var(--hp)));
+  backdrop-filter: saturate(calc(1 + 0.35 * var(--hp))) blur(calc(18px * var(--hp)));
 }
 
-.brand-lockup {
-  display: flex;
+.brand {
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
+  text-decoration: none;
 }
 
-/* Neutral square so the authentic Flutter blue reads cleanly — solid yellow is
-   reserved for the primary action */
 .brand-mark {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   flex-shrink: 0;
   background: var(--panel-2);
   border: var(--hair) solid var(--line);
   border-radius: var(--radius);
+  box-shadow: var(--sheen);
 }
 
 .flutter-logo {
-  width: 17px;
-  height: 17px;
+  width: 15px;
+  height: 15px;
   flex-shrink: 0;
 }
 
-.brand-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-}
-
-.topbar-title {
-  font-size: 0.9rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+/* Wordmark uses the display face at a readable weight — same family as the
+   hero, so the header and the headline are visibly one voice. */
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.15rem;
+  letter-spacing: var(--track-wordmark);
+  text-transform: uppercase;
+  line-height: 1;
   color: var(--ink);
   white-space: nowrap;
 }
 
-.topbar-caption {
-  max-width: 46rem;
-  color: var(--ink-3);
-  font-size: 0.75rem;
-  line-height: 1.4;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.wordmark em {
+  font-style: normal;
+  color: var(--accent-text);
 }
 
-.topbar-badges {
+.header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-shrink: 0;
 }
 
-.topbar-subtitle {
-  font-size: 9px;
-  color: var(--accent-text);
-  background: var(--accent-wash);
-  border: var(--hair) solid var(--accent-ring);
-  padding: 5px 8px 4px;
-  border-radius: var(--radius);
-  line-height: 1;
+.header-link {
+  font-family: var(--font-mono);
+  font-size: var(--type-label);
+  font-weight: 500;
+  letter-spacing: var(--track-chip);
+  text-transform: uppercase;
+  color: var(--ink-2);
+  text-decoration: none;
+  padding: 6px 2px;
+  border-bottom: var(--hair) solid transparent;
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
 
-.topbar-version {
+.header-link:hover {
+  color: var(--accent-text);
+  border-bottom-color: var(--accent-line);
+}
+
+.chip-version {
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 500;
@@ -90,30 +106,104 @@
   color: var(--ink-3);
   background: var(--panel-2);
   border: var(--hair) solid var(--line);
-  padding: 5px 8px 4px;
+  padding: 4px 7px 3px;
   border-radius: var(--radius);
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 
-/* ── SHELL ──────────────────────────────────────────────────────────────── */
-.app-shell {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  padding: var(--gap) var(--pad-x) 0;
+/* ── HERO BAND ──────────────────────────────────────────────────────────── */
+.hero {
+  display: grid;
+  gap: 20px;
+  max-width: 1320px;
+  width: 100%;
+  margin: 0 auto;
+  padding: calc(var(--header-h) + var(--hero-y)) var(--pad-x) var(--hero-y);
 }
 
-/* ── EDITOR PANES ───────────────────────────────────────────────────────── */
+.hero .display {
+  max-width: 15ch;
+}
+
+.hero .display em {
+  font-style: normal;
+  color: var(--accent-text);
+}
+
+/* Blur labels that float on the surface rather than sitting above it */
+.hero-rail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.rail-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 13px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: var(--track-chip);
+  text-transform: uppercase;
+  color: var(--ink-2);
+  background: color-mix(in srgb, var(--canvas-deep) 72%, transparent);
+  border: var(--hair) solid var(--line);
+  border-radius: var(--radius);
+  -webkit-backdrop-filter: blur(8px) saturate(1.4);
+  backdrop-filter: blur(8px) saturate(1.4);
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.rail-chip::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--accent-line);
+}
+
+.rail-chip:nth-child(even)::before {
+  background: var(--patina-line);
+}
+
+.rail-chip:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+/* ── WORKSPACE ──────────────────────────────────────────────────────────── */
+/*
+   Scrolling past the hero lands the workspace filling the viewport exactly as
+   the tool did before the hero existed.
+*/
+.app-shell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  min-height: calc(100svh - var(--header-h));
+  padding: var(--gap) var(--pad-x) 0;
+  border-top: var(--hair) solid var(--line);
+  scroll-margin-top: var(--header-h);
+}
+
+/* ── EDITOR WINDOWS ─────────────────────────────────────────────────────── */
 .editors-wrap {
   flex: 1;
-  min-height: 0;
+  min-height: min(62vh, 660px);
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--gap);
 }
 
+/* A lacquer window: hairline edge, 1px specular top, deep soft drop */
 .editor-pane {
   display: flex;
   flex-direction: column;
@@ -122,8 +212,8 @@
   background: var(--code-bg);
   border: var(--hair) solid var(--line);
   border-top: var(--rule) solid var(--line-strong);
-  border-radius: var(--radius);
-  animation: paneIn 220ms var(--ease) both;
+  border-radius: var(--radius-window);
+  box-shadow: var(--sheen), var(--lift-sm);
 }
 
 .editor-pane.pane-input {
@@ -131,7 +221,7 @@
 }
 
 .editor-pane.pane-output {
-  border-top-color: var(--orange-line);
+  border-top-color: var(--patina-line);
 }
 
 .pane-header {
@@ -141,7 +231,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 12px;
+  padding: 9px 13px;
   background: var(--panel);
   border-bottom: var(--hair) solid var(--line);
 }
@@ -149,7 +239,7 @@
 .pane-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   font-size: 9px;
   color: var(--ink);
 }
@@ -158,7 +248,7 @@
   font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 500;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--track-chip);
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
@@ -173,7 +263,7 @@
 
 .lang-badge {
   font-size: 9px;
-  padding: 3px 5px 2px;
+  padding: 3px 6px 2px;
   border-radius: var(--radius);
   line-height: 1;
   border: var(--hair) solid transparent;
@@ -186,9 +276,9 @@
 }
 
 .lang-dart {
-  color: var(--orange);
-  background: var(--accent-wash);
-  border-color: var(--accent-ring);
+  color: var(--patina-text);
+  background: var(--patina-wash);
+  border-color: var(--patina-ring);
 }
 
 .pane-dot {
@@ -202,6 +292,7 @@
 
 .pane-dot.active {
   background: var(--ok);
+  box-shadow: 0 0 0 3px var(--ok-wash);
 }
 
 #jsonEditor,
@@ -216,7 +307,7 @@
   align-items: center;
   gap: 14px;
   flex-wrap: wrap;
-  padding: 7px 12px;
+  padding: 8px 13px;
   margin-top: var(--gap);
   font-family: var(--font-mono);
   font-size: 10px;
@@ -224,6 +315,7 @@
   background: var(--panel);
   border: var(--hair) solid var(--line);
   border-radius: var(--radius);
+  box-shadow: var(--sheen);
   font-variant-numeric: tabular-nums;
 }
 
@@ -249,10 +341,12 @@
   border-radius: 50%;
   background: var(--ok);
   flex-shrink: 0;
+  box-shadow: 0 0 0 3px var(--ok-wash);
 }
 
 .statusbar.is-error .status-dot {
   background: var(--err);
+  box-shadow: 0 0 0 3px var(--err-wash);
 }
 
 .statusbar.is-error .status-state {
@@ -262,7 +356,7 @@
 .status-state {
   color: var(--ink-2);
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: var(--track-chip);
   font-size: 9px;
 }
 
@@ -285,10 +379,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 10px;
-  padding: 14px var(--pad-x) 16px;
+  max-width: 1320px;
+  width: 100%;
+  margin: 0 auto;
+  margin-top: calc(var(--hero-y) / 2);
+  padding: 22px var(--pad-x) 26px;
+  border-top: var(--hair) solid var(--line);
   font-family: var(--font-mono);
   font-size: 0.68rem;
+  letter-spacing: var(--track-chip);
+  text-transform: uppercase;
   color: var(--ink-3);
 }
 
@@ -306,4 +408,8 @@
 
 .footer a:hover {
   border-bottom-color: var(--accent-line);
+}
+
+.footer-sep {
+  color: var(--line-strong);
 }
