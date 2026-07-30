@@ -4,10 +4,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark light" />
   <title>JSON → Dart Model Generator</title>
+
+  <!-- Resolve the theme before first paint so there is no flash of the wrong one -->
+  <script>
+    (function () {
+      var t = "dark";
+      try {
+        var saved = localStorage.getItem("json_to_dart_theme");
+        t = saved || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+      } catch (e) { /* private mode — fall back to dark */ }
+      document.documentElement.setAttribute("data-theme", t);
+    })();
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 
@@ -38,33 +53,81 @@
       <span class="topbar-subtitle">Flutter</span>
       <span id="versionChip" class="topbar-version"></span>
       <script>document.getElementById('versionChip').textContent = window.APP_VERSION || '';</script>
+      <button id="themeToggle" class="theme-toggle" type="button" onclick="toggleTheme()"
+        title="Switch between light and dark" aria-label="Switch colour theme">
+        <svg class="icon-sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"
+          stroke-linecap="round" aria-hidden="true">
+          <circle cx="8" cy="8" r="3.1" />
+          <path d="M8 1.4v1.6M8 13v1.6M1.4 8h1.6M13 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1" />
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M13.4 9.9A5.9 5.9 0 0 1 6.1 2.6a5.9 5.9 0 1 0 7.3 7.3Z" />
+        </svg>
+      </button>
     </div>
   </div>
 
   <div class="app-shell">
     <div class="toolbar">
       <div class="toolbar-group toolbar-group-grow">
-        <input id="classNameInput" class="tb-input" placeholder="Class name" />
+        <label class="tb-label" for="classNameInput">Class</label>
+        <input id="classNameInput" class="tb-input" placeholder="RootModel" />
       </div>
 
       <div class="toolbar-divider"></div>
 
       <div class="toolbar-group">
-        <label class="cb-pill checked" id="fromJsonPill" onclick="togglePill(this,'fromJsonCheck')">
-          <input type="checkbox" id="fromJsonCheck" checked />
-          <span class="cb-dot"></span>
-          fromJson
-        </label>
-        <label class="cb-pill checked" id="toJsonPill" onclick="togglePill(this,'toJsonCheck')">
-          <input type="checkbox" id="toJsonCheck" checked />
-          <span class="cb-dot"></span>
-          toJson
-        </label>
-        <label class="cb-pill" id="prefixPill" onclick="togglePill(this,'usePrefixCheck')">
-          <input type="checkbox" id="usePrefixCheck" />
-          <span class="cb-dot"></span>
-          Prefix
-        </label>
+        <span class="flag-wrap">
+          <label class="cb-pill checked" id="fromJsonPill" onclick="togglePill(this,'fromJsonCheck')">
+            <input type="checkbox" id="fromJsonCheck" checked />
+            <span class="cb-dot"></span>
+            fromJson
+          </label>
+          <button class="flag-info" type="button" onclick="openInfoDialog('fromJson')"
+            aria-label="What does fromJson do?" title="What does fromJson do?">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
+              aria-hidden="true">
+              <circle cx="8" cy="8" r="6.1" />
+              <path d="M8 7.2v4" />
+              <circle cx="8" cy="4.9" r="0.7" fill="currentColor" stroke="none" />
+            </svg>
+          </button>
+        </span>
+
+        <span class="flag-wrap">
+          <label class="cb-pill checked" id="toJsonPill" onclick="togglePill(this,'toJsonCheck')">
+            <input type="checkbox" id="toJsonCheck" checked />
+            <span class="cb-dot"></span>
+            toJson
+          </label>
+          <button class="flag-info" type="button" onclick="openInfoDialog('toJson')" aria-label="What does toJson do?"
+            title="What does toJson do?">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
+              aria-hidden="true">
+              <circle cx="8" cy="8" r="6.1" />
+              <path d="M8 7.2v4" />
+              <circle cx="8" cy="4.9" r="0.7" fill="currentColor" stroke="none" />
+            </svg>
+          </button>
+        </span>
+
+        <span class="flag-wrap">
+          <label class="cb-pill" id="prefixPill" onclick="togglePill(this,'usePrefixCheck')">
+            <input type="checkbox" id="usePrefixCheck" />
+            <span class="cb-dot"></span>
+            Prefix
+          </label>
+          <button class="flag-info" type="button" onclick="openInfoDialog('prefix')" aria-label="What does Prefix do?"
+            title="What does Prefix do?">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
+              aria-hidden="true">
+              <circle cx="8" cy="8" r="6.1" />
+              <path d="M8 7.2v4" />
+              <circle cx="8" cy="4.9" r="0.7" fill="currentColor" stroke="none" />
+            </svg>
+          </button>
+        </span>
       </div>
 
       <div class="prefix-wrap" id="prefixWrap">
@@ -83,10 +146,11 @@
           </svg>
         </button>
         <button class="btn-generate" onclick="generateDart()">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-            <polygon points="4,2 14,8 4,14" fill="white" />
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <polygon points="4,2 14,8 4,14" />
           </svg>
           Generate
+          <kbd class="kbd" id="generateKbd">⌘↵</kbd>
         </button>
         <button class="btn-copy" onclick="copyGeneratedCode()">
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -107,9 +171,10 @@
     </div>
 
     <div class="editors-wrap">
-      <div class="editor-pane">
+      <div class="editor-pane pane-input">
         <div class="pane-header">
           <span class="pane-title">
+            <span class="pane-index">01</span>
             <span class="pane-dot active"></span>
             Input
             <span class="lang-badge lang-json">JSON</span>
@@ -119,9 +184,10 @@
         <div id="jsonEditor"></div>
       </div>
 
-      <div class="editor-pane">
+      <div class="editor-pane pane-output">
         <div class="pane-header">
           <span class="pane-title">
+            <span class="pane-index">02</span>
             <span class="pane-dot" id="outputDot"></span>
             Output
             <span class="lang-badge lang-dart">Dart</span>
@@ -130,6 +196,21 @@
         </div>
         <div id="outputEditor"></div>
       </div>
+    </div>
+
+    <div id="statusbar" class="statusbar" role="status" aria-live="polite">
+      <span class="status-item">
+        <span class="status-dot"></span>
+        <span class="status-state" id="statusState">Ready</span>
+      </span>
+      <span class="status-sep"></span>
+      <span class="status-item"><span class="status-key">classes</span><span class="status-val"
+          id="statClasses">0</span></span>
+      <span class="status-item"><span class="status-key">fields</span><span class="status-val"
+          id="statFields">0</span></span>
+      <span class="status-item"><span class="status-key">lines</span><span class="status-val"
+          id="statLines">0</span></span>
+      <span class="status-right" id="statusMessage">Paste JSON to begin</span>
     </div>
   </div>
 
@@ -162,6 +243,115 @@
       <div class="dialog-actions">
         <button class="btn-copy" onclick="clearHistory()">Clear</button>
         <button id="historyLoadBtn" class="btn-generate" onclick="loadSelectedHistory()" disabled>Load Selected</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="infoDialog" class="dialog-overlay" onclick="closeInfoDialog(event)">
+    <div class="dialog-card" onclick="event.stopPropagation()">
+      <div class="dialog-head">
+        <div>
+          <div class="tb-label">Generation options</div>
+          <div class="dialog-note">What each switch adds to the generated Dart, and when you want it on.</div>
+        </div>
+        <button class="dialog-close" onclick="closeInfoDialog()" aria-label="Close info dialog">×</button>
+      </div>
+
+      <div class="dialog-body info-body">
+        <section class="info-section" id="info-fromJson">
+          <header class="info-head">
+            <span class="info-name">fromJson</span>
+            <span class="info-dir">JSON → Dart</span>
+          </header>
+
+          <p class="info-lead">Adds a <code>RootModel.fromJson(Map&lt;String, dynamic&gt; json)</code> named
+            constructor — the <strong>deserialise</strong> direction.</p>
+
+          <dl class="info-grid">
+            <dt>When enabled</dt>
+            <dd>Every field gets read out of the decoded map and cast to its inferred Dart type. Nested objects call
+              their own <code>fromJson</code>; lists of objects are mapped item by item.</dd>
+            <dt>Turn it on</dt>
+            <dd>Whenever you receive this shape from an API, a file, or local storage and need real Dart objects.</dd>
+            <dt>Turn it off</dt>
+            <dd>If the model is only ever <em>sent</em> to the server, so you don't ship a constructor nothing calls.</dd>
+          </dl>
+
+          <pre class="info-code"><span class="tk-cm">// generated for you</span>
+<span class="tk-cl">RootModel</span>.fromJson(<span class="tk-cl">Map</span>&lt;<span class="tk-cl">String</span>, <span class="tk-kw">dynamic</span>&gt; json) {
+  id = json[<span class="tk-st">'id'</span>] <span class="tk-kw">as</span> <span class="tk-cl">int</span>?;
+  address = json[<span class="tk-st">'address'</span>] != <span class="tk-kw">null</span>
+      ? <span class="tk-cl">Address</span>.fromJson(json[<span class="tk-st">'address'</span>])
+      : <span class="tk-kw">null</span>;
+}
+
+<span class="tk-cm">// how you use it</span>
+<span class="tk-kw">final</span> model = <span class="tk-cl">RootModel</span>.fromJson(jsonDecode(body));</pre>
+        </section>
+
+        <section class="info-section" id="info-toJson">
+          <header class="info-head">
+            <span class="info-name">toJson</span>
+            <span class="info-dir">Dart → JSON</span>
+          </header>
+
+          <p class="info-lead">Adds a <code>Map&lt;String, dynamic&gt; toJson()</code> method — the
+            <strong>serialise</strong> direction.</p>
+
+          <dl class="info-grid">
+            <dt>When enabled</dt>
+            <dd>The object turns back into a plain map using your <em>original</em> JSON key names, not the Dart field
+              names. Nested models get <code>.toJson()</code> called on them; lists of models are mapped.</dd>
+            <dt>Turn it on</dt>
+            <dd>When you POST or PUT this model, cache it, or write it to disk — anything that ends in
+              <code>jsonEncode</code>.</dd>
+            <dt>Turn it off</dt>
+            <dd>For read-only response models you never send back.</dd>
+          </dl>
+
+          <pre class="info-code"><span class="tk-cm">// generated for you</span>
+<span class="tk-cl">Map</span>&lt;<span class="tk-cl">String</span>, <span class="tk-kw">dynamic</span>&gt; toJson() {
+  <span class="tk-kw">return</span> {
+    <span class="tk-st">'id'</span>: id,
+    <span class="tk-st">'address'</span>: address?.toJson(),
+  };
+}
+
+<span class="tk-cm">// how you use it</span>
+<span class="tk-kw">await</span> http.post(url, body: jsonEncode(model.toJson()));</pre>
+        </section>
+
+        <section class="info-section" id="info-prefix">
+          <header class="info-head">
+            <span class="info-name">Prefix</span>
+            <span class="info-dir">Naming</span>
+          </header>
+
+          <p class="info-lead">Puts a string of your choice in front of the class names this tool invents for you.</p>
+
+          <dl class="info-grid">
+            <dt>When enabled</dt>
+            <dd>A second field appears for the prefix. With <code>Api</code>, the nested class discovered from
+              <code>"address"</code> is generated as <code>ApiAddress</code> instead of <code>Address</code> — and every
+              reference to it updates to match.</dd>
+            <dt>Turn it on</dt>
+            <dd>When the generated names would collide with classes you already have — <code>User</code>,
+              <code>Address</code> and <code>Item</code> are the usual suspects — or to namespace models per API.</dd>
+            <dt>Scope</dt>
+            <dd>The prefix applies to the nested classes discovered in your payload. The root class always uses exactly
+              what you typed in <strong>Class</strong>.</dd>
+          </dl>
+
+          <pre class="info-code"><span class="tk-cm">// prefix off</span>
+<span class="tk-cl">Address</span>? address;
+
+<span class="tk-cm">// prefix "Api"</span>
+<span class="tk-cl">ApiAddress</span>? address;</pre>
+        </section>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="btn-generate" onclick="closeInfoDialog()">Got it</button>
       </div>
     </div>
   </div>

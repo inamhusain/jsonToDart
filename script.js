@@ -1,44 +1,156 @@
 let jsonEditor, outputEditor;
 const HISTORY_KEY = "json_to_dart_history_v1";
 const HISTORY_LIMIT = 8;
+const THEME_KEY = "json_to_dart_theme";
 let selectedHistoryId = null;
+let monacoReady = false;
 
 const APP_VERSION = window.APP_VERSION || "v1.0.0";
+
+/* ==========================================================================
+   THEME
+   The <html data-theme> attribute is set pre-paint by an inline script in
+   index.html. This module keeps it, localStorage, and Monaco in sync.
+   ========================================================================== */
+
+const MONACO_THEME = { dark: "jsonToDartDark", light: "jsonToDartLight" };
+
+function currentTheme() {
+  return document.documentElement.getAttribute("data-theme") === "light"
+    ? "light"
+    : "dark";
+}
+
+function applyTheme(theme, persist) {
+  const next = theme === "light" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+
+  if (persist) {
+    try {
+      localStorage.setItem(THEME_KEY, next);
+    } catch (_) {
+      /* private mode — the theme still applies for this session */
+    }
+  }
+
+  if (monacoReady) {
+    monaco.editor.setTheme(MONACO_THEME[next]);
+  }
+
+  const toggle = document.getElementById("themeToggle");
+  if (toggle) {
+    toggle.setAttribute(
+      "aria-label",
+      next === "dark" ? "Switch to light theme" : "Switch to dark theme"
+    );
+  }
+}
+
+function toggleTheme() {
+  applyTheme(currentTheme() === "dark" ? "light" : "dark", true);
+}
+
+// Follow the OS only while the user has not made an explicit choice.
+(function watchSystemTheme() {
+  if (!window.matchMedia) return;
+  const query = window.matchMedia("(prefers-color-scheme: light)");
+  const onChange = (event) => {
+    let hasOverride = false;
+    try {
+      hasOverride = !!localStorage.getItem(THEME_KEY);
+    } catch (_) {
+      /* treat unreadable storage as no override */
+    }
+    if (!hasOverride) applyTheme(event.matches ? "light" : "dark", false);
+  };
+
+  if (query.addEventListener) query.addEventListener("change", onChange);
+  else if (query.addListener) query.addListener(onChange);
+})();
 
 require.config({
   paths: { vs: "https://unpkg.com/monaco-editor@0.52.2/min/vs" },
 });
 
 require(["vs/editor/editor.main"], function () {
-  const darkTheme = {
+  monaco.editor.defineTheme(MONACO_THEME.dark, {
     base: "vs-dark",
     inherit: true,
     rules: [
-      { token: "comment", foreground: "4a5568" },
-      { token: "keyword", foreground: "54b3f5" },
-      { token: "string", foreground: "a8d8a8" },
-      { token: "number", foreground: "fbbf24" },
-      { token: "type", foreground: "c084fc" },
+      { token: "comment", foreground: "5a5a64", fontStyle: "italic" },
+      { token: "keyword", foreground: "c4a0ff" },
+      { token: "string", foreground: "86efac" },
+      { token: "string.key.json", foreground: "7dd3fc" },
+      { token: "string.value.json", foreground: "86efac" },
+      { token: "number", foreground: "f5c518" },
+      { token: "keyword.json", foreground: "f5c518" },
+      { token: "type", foreground: "7dd3fc" },
+      { token: "type.identifier", foreground: "7dd3fc" },
+      { token: "delimiter", foreground: "8a8a94" },
     ],
     colors: {
-      "editor.background": "#0a0e1a",
-      "editor.foreground": "#e2e8f0",
-      "editorLineNumber.foreground": "#2d3748",
-      "editorLineNumber.activeForeground": "#64748b",
-      "editor.selectionBackground": "#1d4ed840",
-      "editor.lineHighlightBackground": "#111827",
-      "editorCursor.foreground": "#54b3f5",
-      "editorIndentGuide.background": "#1e2a3a",
-      "editorGutter.background": "#0a0e1a",
-      "scrollbarSlider.background": "#1e2a3a",
-      "scrollbarSlider.hoverBackground": "#2d3748",
+      "editor.background": "#0e0e10",
+      "editor.foreground": "#ededef",
+      "editorLineNumber.foreground": "#3a3a42",
+      "editorLineNumber.activeForeground": "#a1a1aa",
+      "editor.selectionBackground": "#f5c5182e",
+      "editor.inactiveSelectionBackground": "#f5c5181a",
+      "editor.lineHighlightBackground": "#16161a",
+      "editorCursor.foreground": "#f5c518",
+      "editorIndentGuide.background": "#23232a",
+      "editorIndentGuide.activeBackground": "#35353d",
+      "editorGutter.background": "#0e0e10",
+      "editorBracketMatch.background": "#f5c5181f",
+      "editorBracketMatch.border": "#f5c51866",
+      "scrollbarSlider.background": "#26262b",
+      "scrollbarSlider.hoverBackground": "#35353d",
+      "scrollbarSlider.activeBackground": "#43434d",
+      "editorWidget.background": "#16161a",
+      "editorWidget.border": "#26262b",
     },
-  };
+  });
 
-  monaco.editor.defineTheme("flutterDark", darkTheme);
+  monaco.editor.defineTheme(MONACO_THEME.light, {
+    base: "vs",
+    inherit: true,
+    rules: [
+      { token: "comment", foreground: "83838c", fontStyle: "italic" },
+      { token: "keyword", foreground: "7c3aed" },
+      { token: "string", foreground: "15803d" },
+      { token: "string.key.json", foreground: "0369a1" },
+      { token: "string.value.json", foreground: "15803d" },
+      { token: "number", foreground: "b45309" },
+      { token: "keyword.json", foreground: "b45309" },
+      { token: "type", foreground: "0369a1" },
+      { token: "type.identifier", foreground: "0369a1" },
+      { token: "delimiter", foreground: "70707a" },
+    ],
+    colors: {
+      "editor.background": "#ffffff",
+      "editor.foreground": "#17171a",
+      "editorLineNumber.foreground": "#bcbcb6",
+      "editorLineNumber.activeForeground": "#55555c",
+      "editor.selectionBackground": "#f5c51859",
+      "editor.inactiveSelectionBackground": "#f5c51830",
+      "editor.lineHighlightBackground": "#f7f7f4",
+      "editorCursor.foreground": "#a16207",
+      "editorIndentGuide.background": "#ededea",
+      "editorIndentGuide.activeBackground": "#d6d6d0",
+      "editorGutter.background": "#ffffff",
+      "editorBracketMatch.background": "#f5c51833",
+      "editorBracketMatch.border": "#c77f0088",
+      "scrollbarSlider.background": "#e3e3de",
+      "scrollbarSlider.hoverBackground": "#cfcfc8",
+      "scrollbarSlider.activeBackground": "#b8b8b0",
+      "editorWidget.background": "#ffffff",
+      "editorWidget.border": "#e3e3de",
+    },
+  });
+
+  monacoReady = true;
 
   const sharedOpts = {
-    theme: "flutterDark",
+    theme: MONACO_THEME[currentTheme()],
     automaticLayout: true,
     minimap: { enabled: false },
     scrollBeyondLastLine: false,
@@ -78,8 +190,134 @@ require(["vs/editor/editor.main"], function () {
     versionChip.textContent = APP_VERSION;
   }
 
+  // Cmd/Ctrl+Enter generates. Registered on the editors too, since Monaco
+  // swallows keydown while focused.
+  const runShortcut = monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter;
+  jsonEditor.addCommand(runShortcut, generateDart);
+  outputEditor.addCommand(runShortcut, generateDart);
+
+  // Editing the payload makes the current output stale.
+  jsonEditor.onDidChangeModelContent(() => {
+    if (outputEditor.getValue().trim()) {
+      setStatus("modified", "Payload changed — regenerate to update output");
+    }
+  });
+
   hydrateHistory();
+  setStatus("ready", "Paste JSON, then generate");
 });
+
+// Same shortcut when focus is outside the editors
+document.addEventListener("keydown", (event) => {
+  if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+    event.preventDefault();
+    generateDart();
+  }
+  if (event.key === "Escape") {
+    closeHistoryDialog();
+    closeInfoDialog();
+  }
+});
+
+// Show the modifier that actually applies on this platform
+function labelGenerateShortcut() {
+  const kbd = document.getElementById("generateKbd");
+  if (!kbd) return;
+  const platform =
+    (navigator.userAgentData && navigator.userAgentData.platform) ||
+    navigator.platform ||
+    navigator.userAgent;
+  if (!/Mac|iPhone|iPad|iPod/.test(platform)) kbd.textContent = "Ctrl↵";
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", labelGenerateShortcut);
+} else {
+  labelGenerateShortcut();
+}
+
+/* ==========================================================================
+   STATUS STRIP
+   ========================================================================== */
+
+function setStatus(state, message, counts) {
+  const bar = document.getElementById("statusbar");
+  const stateEl = document.getElementById("statusState");
+  const messageEl = document.getElementById("statusMessage");
+  if (!bar || !stateEl) return;
+
+  const labels = { ready: "Ready", ok: "Generated", modified: "Modified", error: "Invalid JSON" };
+  stateEl.textContent = labels[state] || state;
+  bar.classList.toggle("is-error", state === "error");
+
+  if (messageEl) messageEl.textContent = message || "";
+
+  if (counts) {
+    setCount("statClasses", counts.classes);
+    setCount("statFields", counts.fields);
+    setCount("statLines", counts.lines);
+  }
+}
+
+// Re-trigger the bump animation only when the number actually moves
+function setCount(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  const next = String(value);
+  if (el.textContent === next) return;
+
+  el.textContent = next;
+  el.classList.remove("is-bumped");
+  void el.offsetWidth; // force a reflow so the animation restarts
+  el.classList.add("is-bumped");
+}
+
+/* ==========================================================================
+   MOTION
+   ========================================================================== */
+
+const prefersReducedMotion =
+  window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// Flash the output pane when fresh code lands
+function flashOutputPane() {
+  if (prefersReducedMotion) return;
+
+  const pane = document.querySelector(".pane-output");
+  if (!pane) return;
+
+  pane.classList.remove("is-fresh");
+  void pane.offsetWidth;
+  pane.classList.add("is-fresh");
+  setTimeout(() => pane.classList.remove("is-fresh"), 750);
+}
+
+// Dot grid drifts a few pixels with the pointer — coalesced into one rAF
+(function pointerParallax() {
+  if (prefersReducedMotion) return;
+
+  let queued = false;
+  let x = 0;
+  let y = 0;
+
+  window.addEventListener(
+    "pointermove",
+    (event) => {
+      x = (event.clientX / window.innerWidth - 0.5) * 14;
+      y = (event.clientY / window.innerHeight - 0.5) * 14;
+
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        document.documentElement.style.setProperty("--px", `${x.toFixed(1)}px`);
+        document.documentElement.style.setProperty("--py", `${y.toFixed(1)}px`);
+        queued = false;
+      });
+    },
+    { passive: true }
+  );
+})();
 
 function togglePill(pill, checkId) {
   const check = document.getElementById(checkId);
@@ -113,6 +351,35 @@ function openHistoryDialog() {
 function closeHistoryDialog(event) {
   if (event && event.target !== document.getElementById("historyDialog")) return;
   document.getElementById("historyDialog").classList.remove("active");
+}
+
+/* ==========================================================================
+   INFO DIALOG — one dialog, three sections, scrolled to whichever ⓘ you hit
+   ========================================================================== */
+
+function openInfoDialog(topic) {
+  const dialog = document.getElementById("infoDialog");
+  if (!dialog) return;
+
+  dialog.querySelectorAll(".info-section").forEach((section) => {
+    section.classList.remove("is-target");
+  });
+
+  dialog.classList.add("active");
+
+  const target = topic && document.getElementById(`info-${topic}`);
+  if (target) {
+    target.classList.add("is-target");
+    // Jump without smooth-scrolling: the dialog has only just been revealed,
+    // so an animated scroll from the top reads as a glitch.
+    const body = dialog.querySelector(".info-body");
+    if (body) body.scrollTop = target.offsetTop - body.offsetTop;
+  }
+}
+
+function closeInfoDialog(event) {
+  if (event && event.target !== document.getElementById("infoDialog")) return;
+  document.getElementById("infoDialog").classList.remove("active");
 }
 
 function getHistorySnapshot() {
@@ -453,6 +720,8 @@ function buildClass(
 }
 
 function generateDart() {
+  if (!jsonEditor || !outputEditor) return;
+
   try {
     const json = JSON.parse(jsonEditor.getValue());
     const mainClassName = toPascalCase(
@@ -495,12 +764,30 @@ function generateDart() {
       }
     }
 
-    outputEditor.setValue(output.trimEnd());
+    const code = output.trimEnd();
+    outputEditor.setValue(code);
     document.getElementById("outputDot").classList.add("active");
+
+    let fieldCount = 0;
+    for (const name of processed) {
+      const obj = classes.get(name);
+      if (obj && typeof obj === "object" && !Array.isArray(obj)) {
+        fieldCount += Object.keys(obj).length;
+      }
+    }
+
+    setStatus("ok", `${mainClassName} generated`, {
+      classes: processed.size,
+      fields: fieldCount,
+      lines: code ? code.split("\n").length : 0,
+    });
+    flashOutputPane();
+
     saveHistory();
   } catch (e) {
     outputEditor.setValue(`// Invalid JSON\n// ${e.message}`);
     document.getElementById("outputDot").classList.remove("active");
+    setStatus("error", e.message, { classes: 0, fields: 0, lines: 0 });
   }
 }
 
