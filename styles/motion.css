@@ -1,0 +1,285 @@
+/* ==========================================================================
+   motion.css — Keyframes, first-load sequence, ambient drift, interaction
+   feedback, and the reduced-motion escape hatch.
+   ========================================================================== */
+
+/* ==========================================================================
+   MOTION
+
+   Every entrance animation starts from opacity 0 INSIDE its keyframes, never
+   on the element itself. That way the prefers-reduced-motion block below can
+   kill animation outright without leaving anything permanently invisible.
+   ========================================================================== */
+
+@keyframes paneIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* Accent rules draw themselves in from the left */
+@keyframes drawRule {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Brief accent sweep across the output pane when fresh code lands */
+@keyframes sweep {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulseRule {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes dotDrift {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 24px 24px;
+  }
+}
+
+/* ── FIRST-LOAD SEQUENCE ────────────────────────────────────────────────── */
+.topbar {
+  animation: rise 420ms var(--ease) both;
+}
+
+.toolbar {
+  animation: rise 420ms var(--ease) 70ms both;
+}
+
+.editor-pane {
+  animation: rise 460ms var(--ease) both;
+}
+
+.editor-pane.pane-input {
+  animation-delay: 140ms;
+}
+
+.editor-pane.pane-output {
+  animation-delay: 210ms;
+}
+
+.statusbar {
+  animation: rise 420ms var(--ease) 280ms both;
+}
+
+.footer {
+  animation: fadeIn 520ms var(--ease) 360ms both;
+}
+
+/* Stagger the toolbar's own controls just behind the bar itself */
+.toolbar-group>*,
+.toolbar-actions>* {
+  animation: rise 340ms var(--ease) both;
+}
+
+.toolbar-group>*:nth-child(1) {
+  animation-delay: 150ms;
+}
+
+.toolbar-group>*:nth-child(2) {
+  animation-delay: 190ms;
+}
+
+.toolbar-group>*:nth-child(3) {
+  animation-delay: 230ms;
+}
+
+.toolbar-actions>*:nth-child(1) {
+  animation-delay: 230ms;
+}
+
+.toolbar-actions>*:nth-child(2) {
+  animation-delay: 270ms;
+}
+
+.toolbar-actions>*:nth-child(3) {
+  animation-delay: 310ms;
+}
+
+.toolbar-actions>*:nth-child(4) {
+  animation-delay: 350ms;
+}
+
+/* The pane's top accent rule, drawn as an overlay so the real border stays put */
+.editor-pane {
+  position: relative;
+}
+
+.editor-pane::before {
+  content: "";
+  position: absolute;
+  top: calc(-1 * var(--rule));
+  left: 0;
+  right: 0;
+  height: var(--rule);
+  background: var(--accent-line);
+  transform-origin: left center;
+  animation: drawRule 620ms var(--ease) 260ms both;
+  pointer-events: none;
+}
+
+.editor-pane.pane-output::before {
+  background: var(--orange-line);
+  animation-delay: 340ms;
+}
+
+/* ── AMBIENT ────────────────────────────────────────────────────────────── */
+
+/* Dot grid drifts one full cell over a long cycle, and shifts with the pointer
+   (--px / --py are written by script.js on mousemove) */
+body::before {
+  animation: dotDrift 24s linear infinite;
+  transform: translate3d(var(--px, 0px), var(--py, 0px), 0);
+  transition: transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ── INTERACTION ────────────────────────────────────────────────────────── */
+
+/* Accent sweep over the output pane header on a fresh generate */
+.editor-pane.is-fresh .pane-header::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--accent-wash), transparent);
+  animation: sweep 700ms var(--ease) both;
+  pointer-events: none;
+}
+
+.editor-pane.is-fresh::before {
+  animation: pulseRule 700ms var(--ease) both;
+}
+
+/* Status numbers tick over when they change */
+.status-val.is-bumped {
+  animation: rise 260ms var(--ease) both;
+}
+
+/* The checkmark scales in rather than snapping */
+.cb-pill .cb-dot::after {
+  transition: transform var(--dur) var(--ease);
+}
+
+.cb-pill.checked .cb-dot::after {
+  animation: checkIn 200ms var(--ease) both;
+}
+
+@keyframes checkIn {
+  from {
+    opacity: 0;
+    transform: rotate(-45deg) translate(0, -1px) scale(0.4);
+  }
+
+  to {
+    opacity: 1;
+    transform: rotate(-45deg) translate(0, -1px) scale(1);
+  }
+}
+
+/* Dialogs scale up a touch as they fade in */
+.dialog-overlay .dialog-card {
+  transition: transform 200ms var(--ease), opacity 200ms var(--ease);
+  transform: scale(0.985) translateY(6px);
+  opacity: 0;
+}
+
+.dialog-overlay.active .dialog-card {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+
+/* Icon buttons rotate their glyph slightly on hover */
+.theme-toggle svg,
+.btn-icon svg {
+  transition: transform 220ms var(--ease);
+}
+
+.theme-toggle:hover svg {
+  transform: rotate(30deg);
+}
+
+.btn-icon:hover svg {
+  transform: rotate(-25deg);
+}
+
+.btn-generate svg {
+  transition: transform 220ms var(--ease);
+}
+
+.btn-generate:hover svg {
+  transform: translateX(2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Entrance keyframes are gone, so make sure nothing is left mid-transform */
+  body::before {
+    transform: none !important;
+  }
+
+  .editor-pane::before {
+    transform: scaleX(1) !important;
+  }
+
+  .dialog-overlay .dialog-card {
+    transform: none;
+    opacity: 1;
+  }
+}

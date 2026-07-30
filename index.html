@@ -7,15 +7,19 @@
   <meta name="color-scheme" content="dark light" />
   <title>JSON → Dart Model Generator</title>
 
-  <!-- Resolve the theme before first paint so there is no flash of the wrong one -->
+  <!--
+    The only inline script in the page. It has to stay inline and stay here:
+    resolving the theme after first paint would flash the wrong one.
+    Mirrors STORAGE_KEYS.theme in src/config.js.
+  -->
   <script>
     (function () {
-      var t = "dark";
+      var theme = "dark";
       try {
         var saved = localStorage.getItem("json_to_dart_theme");
-        t = saved || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+        theme = saved || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
       } catch (e) { /* private mode — fall back to dark */ }
-      document.documentElement.setAttribute("data-theme", t);
+      document.documentElement.setAttribute("data-theme", theme);
     })();
   </script>
 
@@ -24,23 +28,87 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
 
+  <!-- Cascade order matters: tokens first, responsive overrides last -->
+  <link rel="stylesheet" href="styles/tokens.css" />
+  <link rel="stylesheet" href="styles/base.css" />
+  <link rel="stylesheet" href="styles/layout.css" />
+  <link rel="stylesheet" href="styles/controls.css" />
+  <link rel="stylesheet" href="styles/dialogs.css" />
+  <link rel="stylesheet" href="styles/motion.css" />
+  <link rel="stylesheet" href="styles/responsive.css" />
 
   <script src="https://unpkg.com/monaco-editor@0.52.2/min/vs/loader.js"></script>
   <script src="version.js"></script>
+  <script type="module" src="src/main.js"></script>
 </head>
 
 <body>
 
+  <!--
+    Icon sprite. Every icon is defined once here and referenced with <use>.
+    Symbols draw with currentColor so callers control colour via `color` in CSS
+    — descendant selectors cannot reach inside a <use> shadow tree, but
+    inherited properties like `color` and `stroke` can.
+  -->
+  <svg class="icon-sprite" aria-hidden="true" focusable="false">
+    <symbol id="icon-sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"
+      stroke-linecap="round">
+      <circle cx="8" cy="8" r="3.1" />
+      <path
+        d="M8 1.4v1.6M8 13v1.6M1.4 8h1.6M13 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1" />
+    </symbol>
+
+    <symbol id="icon-moon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M13.4 9.9A5.9 5.9 0 0 1 6.1 2.6a5.9 5.9 0 1 0 7.3 7.3Z" />
+    </symbol>
+
+    <symbol id="icon-info" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"
+      stroke-linecap="round">
+      <circle cx="8" cy="8" r="6.1" />
+      <path d="M8 7.2v4" />
+      <circle cx="8" cy="4.9" r="0.7" fill="currentColor" stroke="none" />
+    </symbol>
+
+    <symbol id="icon-history" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M8 3.25v4.1l2.6 1.55" />
+      <path d="M2.75 8a5.25 5.25 0 1 0 1.54-3.71" />
+      <path d="M2.75 2.75v2.7h2.7" />
+    </symbol>
+
+    <symbol id="icon-play" viewBox="0 0 16 16">
+      <polygon points="4,2 14,8 4,14" fill="currentColor" />
+    </symbol>
+
+    <symbol id="icon-copy" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+      <rect x="5" y="5" width="9" height="9" rx="2" />
+      <path d="M3 11V3a2 2 0 012-2h8" />
+    </symbol>
+
+    <symbol id="icon-download" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M8 2v8" />
+      <path d="M5 7.5 8 10.5l3-3" />
+      <path d="M3 13.5h10" />
+    </symbol>
+
+    <symbol id="icon-check" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="2,8 6,12 14,4" />
+    </symbol>
+
+    <symbol id="icon-flutter" viewBox="0 0 24 24" fill="none">
+      <path d="M14.314 0L2 12.314l3.686 3.686L21.686 0h-7.372Z" fill="#42A5F5" />
+      <path d="M5.686 16L9.372 19.686 21.686 7.372V0L5.686 16Z" fill="#1E88E5" />
+      <path d="M9.372 19.686L14.314 24h7.372L13.058 15.372l-3.686 4.314Z" fill="#42A5F5" />
+      <path d="M13.058 15.372L9.372 19.686l2.314 2.314 5.372-5.37-4.0-1.258Z" fill="#0D47A1" opacity="0.5" />
+    </symbol>
+  </svg>
+
   <div class="topbar">
     <div class="brand-lockup">
       <div class="brand-mark">
-        <svg class="flutter-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M14.314 0L2 12.314l3.686 3.686L21.686 0h-7.372Z" fill="#42A5F5" />
-          <path d="M5.686 16L9.372 19.686 21.686 7.372V0L5.686 16Z" fill="#1E88E5" />
-          <path d="M9.372 19.686L14.314 24h7.372L13.058 15.372l-3.686 4.314Z" fill="#42A5F5" />
-          <path d="M13.058 15.372L9.372 19.686l2.314 2.314 5.372-5.37-4.0-1.258Z" fill="#0D47A1" opacity="0.5" />
+        <svg class="flutter-logo" aria-hidden="true">
+          <use href="#icon-flutter" />
         </svg>
       </div>
       <div class="brand-copy">
@@ -52,17 +120,13 @@
     <div class="topbar-badges">
       <span class="topbar-subtitle">Flutter</span>
       <span id="versionChip" class="topbar-version"></span>
-      <script>document.getElementById('versionChip').textContent = window.APP_VERSION || '';</script>
-      <button id="themeToggle" class="theme-toggle" type="button" onclick="toggleTheme()"
-        title="Switch between light and dark" aria-label="Switch colour theme">
-        <svg class="icon-sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"
-          stroke-linecap="round" aria-hidden="true">
-          <circle cx="8" cy="8" r="3.1" />
-          <path d="M8 1.4v1.6M8 13v1.6M1.4 8h1.6M13 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1" />
+      <button id="themeToggle" class="theme-toggle" type="button" title="Switch between light and dark"
+        aria-label="Switch colour theme">
+        <svg class="icon-sun" aria-hidden="true">
+          <use href="#icon-sun" />
         </svg>
-        <svg class="icon-moon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"
-          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M13.4 9.9A5.9 5.9 0 0 1 6.1 2.6a5.9 5.9 0 1 0 7.3 7.3Z" />
+        <svg class="icon-moon" aria-hidden="true">
+          <use href="#icon-moon" />
         </svg>
       </button>
     </div>
@@ -77,93 +141,85 @@
 
       <div class="toolbar-divider"></div>
 
+      <!--
+        Each flag is a <label> wrapping a hidden checkbox, so clicking it
+        toggles natively; src/ui/toolbar.js listens for `change`. The ⓘ is a
+        sibling of the label, never a child — nesting it would make every
+        info click also flip the flag.
+      -->
       <div class="toolbar-group">
         <span class="flag-wrap">
-          <label class="cb-pill checked" id="fromJsonPill" onclick="togglePill(this,'fromJsonCheck')">
+          <label class="cb-pill" id="fromJsonPill" for="fromJsonCheck">
             <input type="checkbox" id="fromJsonCheck" checked />
             <span class="cb-dot"></span>
             fromJson
           </label>
-          <button class="flag-info" type="button" onclick="openInfoDialog('fromJson')"
-            aria-label="What does fromJson do?" title="What does fromJson do?">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
-              aria-hidden="true">
-              <circle cx="8" cy="8" r="6.1" />
-              <path d="M8 7.2v4" />
-              <circle cx="8" cy="4.9" r="0.7" fill="currentColor" stroke="none" />
+          <button class="flag-info" type="button" data-info="fromJson" aria-label="What does fromJson do?"
+            title="What does fromJson do?">
+            <svg aria-hidden="true">
+              <use href="#icon-info" />
             </svg>
           </button>
         </span>
 
         <span class="flag-wrap">
-          <label class="cb-pill checked" id="toJsonPill" onclick="togglePill(this,'toJsonCheck')">
+          <label class="cb-pill" id="toJsonPill" for="toJsonCheck">
             <input type="checkbox" id="toJsonCheck" checked />
             <span class="cb-dot"></span>
             toJson
           </label>
-          <button class="flag-info" type="button" onclick="openInfoDialog('toJson')" aria-label="What does toJson do?"
+          <button class="flag-info" type="button" data-info="toJson" aria-label="What does toJson do?"
             title="What does toJson do?">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
-              aria-hidden="true">
-              <circle cx="8" cy="8" r="6.1" />
-              <path d="M8 7.2v4" />
-              <circle cx="8" cy="4.9" r="0.7" fill="currentColor" stroke="none" />
+            <svg aria-hidden="true">
+              <use href="#icon-info" />
             </svg>
           </button>
         </span>
 
         <span class="flag-wrap">
-          <label class="cb-pill" id="prefixPill" onclick="togglePill(this,'usePrefixCheck')">
+          <label class="cb-pill" id="prefixPill" for="usePrefixCheck">
             <input type="checkbox" id="usePrefixCheck" />
             <span class="cb-dot"></span>
             Prefix
           </label>
-          <button class="flag-info" type="button" onclick="openInfoDialog('prefix')" aria-label="What does Prefix do?"
+          <button class="flag-info" type="button" data-info="prefix" aria-label="What does Prefix do?"
             title="What does Prefix do?">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
-              aria-hidden="true">
-              <circle cx="8" cy="8" r="6.1" />
-              <path d="M8 7.2v4" />
-              <circle cx="8" cy="4.9" r="0.7" fill="currentColor" stroke="none" />
+            <svg aria-hidden="true">
+              <use href="#icon-info" />
             </svg>
           </button>
         </span>
       </div>
 
       <div class="prefix-wrap" id="prefixWrap">
-        <input id="prefixInput" class="tb-input" placeholder="Prefix (e.g. Api)" style="width:130px;" />
+        <input id="prefixInput" class="tb-input" placeholder="Prefix (e.g. Api)" />
       </div>
 
       <div class="toolbar-divider"></div>
 
       <div class="toolbar-group toolbar-actions">
-        <button class="btn-icon" onclick="openHistoryDialog()" title="Open local history"
+        <button id="historyOpenBtn" class="btn-icon" type="button" title="Open local history"
           aria-label="Open local history">
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M8 3.25v4.1l2.6 1.55" />
-            <path d="M2.75 8a5.25 5.25 0 1 0 1.54-3.71" />
-            <path d="M2.75 2.75v2.7h2.7" />
+          <svg aria-hidden="true">
+            <use href="#icon-history" />
           </svg>
         </button>
-        <button class="btn-generate" onclick="generateDart()">
-          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <polygon points="4,2 14,8 4,14" />
+        <button id="generateBtn" class="btn-generate" type="button">
+          <svg class="icon-sm" aria-hidden="true">
+            <use href="#icon-play" />
           </svg>
           Generate
           <kbd class="kbd" id="generateKbd">⌘↵</kbd>
         </button>
-        <button class="btn-copy" onclick="copyGeneratedCode()">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="5" y="5" width="9" height="9" rx="2" />
-            <path d="M3 11V3a2 2 0 012-2h8" />
+        <button id="copyBtn" class="btn-copy" type="button">
+          <svg aria-hidden="true">
+            <use href="#icon-copy" />
           </svg>
           Copy
         </button>
-        <button class="btn-copy" onclick="downloadGeneratedCode()">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M8 2v8" />
-            <path d="M5 7.5 8 10.5l3-3" />
-            <path d="M3 13.5h10" />
+        <button id="downloadBtn" class="btn-copy" type="button">
+          <svg aria-hidden="true">
+            <use href="#icon-download" />
           </svg>
           Download
         </button>
@@ -214,21 +270,22 @@
     </div>
   </div>
 
-  <div id="toast" class="toast">
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#68d391" stroke-width="2">
-      <polyline points="2,8 6,12 14,4" />
+  <div id="toast" class="toast" role="status" aria-live="polite">
+    <svg aria-hidden="true">
+      <use href="#icon-check" />
     </svg>
-    Copied to clipboard
+    <span id="toastMessage">Copied to clipboard</span>
   </div>
 
-  <div id="historyDialog" class="dialog-overlay" onclick="closeHistoryDialog(event)">
-    <div class="dialog-card" onclick="event.stopPropagation()">
+  <div id="historyDialog" class="dialog-overlay">
+    <div class="dialog-card">
       <div class="dialog-head">
         <div>
           <div class="tb-label">Recent history</div>
           <div class="dialog-note">Saved only in this browser. Pick an entry to preview it before loading.</div>
         </div>
-        <button class="dialog-close" onclick="closeHistoryDialog()" aria-label="Close history dialog">×</button>
+        <button class="dialog-close" type="button" data-close-dialog="historyDialog"
+          aria-label="Close history dialog">×</button>
       </div>
       <div class="dialog-body">
         <div id="historyList" class="history-list"></div>
@@ -241,20 +298,21 @@
         </div>
       </div>
       <div class="dialog-actions">
-        <button class="btn-copy" onclick="clearHistory()">Clear</button>
-        <button id="historyLoadBtn" class="btn-generate" onclick="loadSelectedHistory()" disabled>Load Selected</button>
+        <button id="historyClearBtn" class="btn-copy" type="button">Clear</button>
+        <button id="historyLoadBtn" class="btn-generate" type="button" disabled>Load Selected</button>
       </div>
     </div>
   </div>
 
-  <div id="infoDialog" class="dialog-overlay" onclick="closeInfoDialog(event)">
-    <div class="dialog-card" onclick="event.stopPropagation()">
+  <div id="infoDialog" class="dialog-overlay">
+    <div class="dialog-card">
       <div class="dialog-head">
         <div>
           <div class="tb-label">Generation options</div>
           <div class="dialog-note">What each switch adds to the generated Dart, and when you want it on.</div>
         </div>
-        <button class="dialog-close" onclick="closeInfoDialog()" aria-label="Close info dialog">×</button>
+        <button class="dialog-close" type="button" data-close-dialog="infoDialog"
+          aria-label="Close info dialog">×</button>
       </div>
 
       <div class="dialog-body info-body">
@@ -351,7 +409,7 @@
       </div>
 
       <div class="dialog-actions">
-        <button class="btn-generate" onclick="closeInfoDialog()">Got it</button>
+        <button class="btn-generate" type="button" data-close-dialog="infoDialog">Got it</button>
       </div>
     </div>
   </div>
@@ -365,7 +423,6 @@
       rel="noopener noreferrer">LinkedIn</a>
   </div>
 
-  <script src="script.js"></script>
 
 </body>
 

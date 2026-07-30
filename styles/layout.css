@@ -1,0 +1,309 @@
+/* ==========================================================================
+   layout.css — Structural regions: topbar, app shell, editor panes,
+   status strip, footer.
+   ========================================================================== */
+
+/* ── TOPBAR ─────────────────────────────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px var(--pad-x);
+  background: var(--panel);
+  border-bottom: var(--hair) solid var(--line);
+}
+
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Neutral square so the authentic Flutter blue reads cleanly — solid yellow is
+   reserved for the primary action */
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  background: var(--panel-2);
+  border: var(--hair) solid var(--line);
+  border-radius: var(--radius);
+}
+
+.flutter-logo {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+.brand-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.topbar-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.topbar-caption {
+  max-width: 46rem;
+  color: var(--ink-3);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.topbar-subtitle {
+  font-size: 9px;
+  color: var(--accent-text);
+  background: var(--accent-wash);
+  border: var(--hair) solid var(--accent-ring);
+  padding: 5px 8px 4px;
+  border-radius: var(--radius);
+  line-height: 1;
+}
+
+.topbar-version {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  background: var(--panel-2);
+  border: var(--hair) solid var(--line);
+  padding: 5px 8px 4px;
+  border-radius: var(--radius);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── SHELL ──────────────────────────────────────────────────────────────── */
+.app-shell {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--gap) var(--pad-x) 0;
+}
+
+/* ── EDITOR PANES ───────────────────────────────────────────────────────── */
+.editors-wrap {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--gap);
+}
+
+.editor-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--code-bg);
+  border: var(--hair) solid var(--line);
+  border-top: var(--rule) solid var(--line-strong);
+  border-radius: var(--radius);
+  animation: paneIn 220ms var(--ease) both;
+}
+
+.editor-pane.pane-input {
+  border-top-color: var(--accent-line);
+}
+
+.editor-pane.pane-output {
+  border-top-color: var(--orange-line);
+}
+
+.pane-header {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--panel);
+  border-bottom: var(--hair) solid var(--line);
+}
+
+.pane-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 9px;
+  color: var(--ink);
+}
+
+.pane-index {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.pane-meta {
+  font-size: 0.7rem;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lang-badge {
+  font-size: 9px;
+  padding: 3px 5px 2px;
+  border-radius: var(--radius);
+  line-height: 1;
+  border: var(--hair) solid transparent;
+}
+
+.lang-json {
+  color: var(--accent-text);
+  background: var(--accent-wash);
+  border-color: var(--accent-ring);
+}
+
+.lang-dart {
+  color: var(--orange);
+  background: var(--accent-wash);
+  border-color: var(--accent-ring);
+}
+
+.pane-dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--line-strong);
+  transition: background var(--dur) var(--ease);
+}
+
+.pane-dot.active {
+  background: var(--ok);
+}
+
+#jsonEditor,
+#outputEditor {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── STATUS STRIP ───────────────────────────────────────────────────────── */
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 7px 12px;
+  margin-top: var(--gap);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  background: var(--panel);
+  border: var(--hair) solid var(--line);
+  border-radius: var(--radius);
+  font-variant-numeric: tabular-nums;
+}
+
+.status-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-key {
+  font-size: 9px;
+  color: var(--ink-3);
+}
+
+.status-val {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ok);
+  flex-shrink: 0;
+}
+
+.statusbar.is-error .status-dot {
+  background: var(--err);
+}
+
+.statusbar.is-error .status-state {
+  color: var(--err);
+}
+
+.status-state {
+  color: var(--ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 9px;
+}
+
+.status-sep {
+  width: var(--hair);
+  height: 11px;
+  background: var(--line);
+}
+
+.status-right {
+  margin-left: auto;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── FOOTER ─────────────────────────────────────────────────────────────── */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px var(--pad-x) 16px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--ink-3);
+}
+
+.footer strong {
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.footer a {
+  color: var(--accent-text);
+  text-decoration: none;
+  border-bottom: var(--hair) solid transparent;
+  transition: border-color var(--dur) var(--ease);
+}
+
+.footer a:hover {
+  border-bottom-color: var(--accent-line);
+}

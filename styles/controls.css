@@ -1,0 +1,328 @@
+/* ==========================================================================
+   controls.css — Interactive controls: theme toggle, toolbar, inputs,
+   flag checkboxes, buttons, keycap.
+   ========================================================================== */
+
+/* ── THEME TOGGLE ───────────────────────────────────────────────────────── */
+.theme-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--ink-2);
+  background: var(--panel-2);
+  border: var(--hair) solid var(--line);
+  border-radius: var(--radius);
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease),
+    background var(--dur) var(--ease);
+}
+
+.theme-toggle:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+  background: var(--panel-3);
+}
+
+.theme-toggle svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+
+/* Show the icon for the theme you'd switch TO */
+:root[data-theme="dark"] .theme-toggle .icon-sun,
+:root[data-theme="light"] .theme-toggle .icon-moon {
+  display: block;
+}
+
+:root[data-theme="dark"] .theme-toggle .icon-moon,
+:root[data-theme="light"] .theme-toggle .icon-sun {
+  display: none;
+}
+
+/* ── TOOLBAR ────────────────────────────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: var(--gap);
+  background: var(--panel);
+  border: var(--hair) solid var(--line);
+  border-radius: var(--radius);
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar-group-grow {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.toolbar-actions {
+  margin-left: auto;
+  gap: 6px;
+}
+
+.toolbar-divider {
+  width: var(--hair);
+  align-self: stretch;
+  margin: 0 2px;
+  background: var(--line);
+}
+
+.tb-label {
+  font-size: 9px;
+  color: var(--ink-3);
+  flex-shrink: 0;
+}
+
+/* ── INPUTS ─────────────────────────────────────────────────────────────── */
+.tb-input {
+  min-height: 32px;
+  width: 180px;
+  padding: 7px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--ink);
+  background: var(--panel-2);
+  border: var(--hair) solid var(--line);
+  border-radius: var(--radius);
+  outline: none;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
+}
+
+.tb-input::placeholder {
+  color: var(--ink-3);
+  font-family: var(--font-sans);
+}
+
+.tb-input:hover {
+  border-color: var(--line-strong);
+}
+
+.tb-input:focus {
+  background: var(--panel);
+  border-color: var(--accent-line);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.toolbar-group-grow .tb-input {
+  width: 100%;
+}
+
+/* ── FLAG CHECKBOXES (square, no pills) ─────────────────────────────────── */
+.cb-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ink-3);
+  background: transparent;
+  border: var(--hair) solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease),
+    background var(--dur) var(--ease);
+}
+
+.cb-pill:hover {
+  color: var(--ink-2);
+  border-color: var(--line-strong);
+  background: var(--panel-2);
+}
+
+.cb-pill input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cb-dot {
+  display: grid;
+  place-items: center;
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  background: transparent;
+  border: var(--hair) solid var(--line-strong);
+  border-radius: var(--radius);
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.cb-pill.checked {
+  color: var(--ink);
+  border-color: var(--line-strong);
+  background: var(--panel-2);
+}
+
+.cb-pill.checked .cb-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.cb-pill.checked .cb-dot::after {
+  content: "";
+  width: 6px;
+  height: 3px;
+  border-left: 1.5px solid var(--accent-ink);
+  border-bottom: 1.5px solid var(--accent-ink);
+  transform: rotate(-45deg) translate(0, -1px);
+}
+
+/* Flag + its info button, joined into one segmented unit.
+   The button is a DOM sibling of the label, not a child — nesting a button
+   inside a label breaks both a11y and the label's own click target. */
+.flag-wrap {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.flag-wrap .cb-pill {
+  border-right-color: transparent;
+}
+
+.flag-info {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  padding: 0;
+  flex-shrink: 0;
+  cursor: pointer;
+  color: var(--ink-3);
+  background: transparent;
+  border: var(--hair) solid var(--line);
+  border-left: var(--hair) solid var(--line);
+  border-radius: var(--radius);
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+
+.flag-info svg {
+  width: 13px;
+  height: 13px;
+  display: block;
+}
+
+.flag-info:hover {
+  color: var(--accent-text);
+  background: var(--accent-wash);
+  border-color: var(--accent-ring);
+}
+
+.flag-wrap:hover .cb-pill {
+  border-color: var(--line-strong);
+  border-right-color: transparent;
+}
+
+/* Revealed by src/ui/toolbar.js when the Prefix flag is on */
+.prefix-wrap {
+  display: none;
+}
+
+.prefix-wrap.is-visible {
+  display: block;
+}
+
+.prefix-wrap .tb-input {
+  width: 130px;
+}
+
+/* ── BUTTONS ────────────────────────────────────────────────────────────── */
+.btn-generate,
+.btn-copy,
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 7px 12px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  border-radius: var(--radius);
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+
+.btn-generate {
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: var(--hair) solid var(--accent);
+  font-weight: 700;
+}
+
+.btn-generate:hover {
+  background: #ffd83d;
+  border-color: #ffd83d;
+}
+
+.btn-generate:active,
+.btn-copy:active,
+.btn-icon:active {
+  transform: translateY(1px);
+}
+
+/* The play glyph fills with currentColor, which .btn-generate already sets to
+   --accent-ink. A `svg polygon` selector would not work: descendant selectors
+   cannot reach into a <use> shadow tree. */
+
+.btn-copy,
+.btn-icon {
+  color: var(--ink-2);
+  background: transparent;
+  border: var(--hair) solid var(--line);
+}
+
+.btn-copy:hover,
+.btn-icon:hover {
+  color: var(--ink);
+  background: var(--panel-2);
+  border-color: var(--line-strong);
+}
+
+.btn-icon {
+  width: 32px;
+  min-width: 32px;
+  padding: 0;
+}
+
+.btn-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Keycap hint */
+.kbd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  padding: 4px 5px 3px;
+  margin-left: 1px;
+  border-radius: var(--radius);
+  background: var(--on-fill-shade);
+  color: inherit;
+  opacity: 0.8;
+}
